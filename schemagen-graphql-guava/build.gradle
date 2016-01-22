@@ -1,0 +1,12 @@
+
+
+repositories {
+    mavenLocal();
+    mavenCentral()
+}
+dependencies {
+    compile(project(':')) {
+        transitive = true
+    }
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
