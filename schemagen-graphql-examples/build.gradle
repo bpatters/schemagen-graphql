@@ -1,0 +1,23 @@
+group 'com.schemagen.graphql'
+version '0.1-SNAPSHOT'
+
+apply plugin: 'java'
+
+sourceCompatibility = 1.7
+
+ext {
+    jacksonVersion = "2.5.1";
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile(project(':')) {
+        transitive = true
+    }
+    compile( "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}");
+    compile( "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}");
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}

@@ -32,9 +32,13 @@ public class GraphQLSchemaBuilder {
 	private List<String> typeMapperPackages = new ArrayList<String>();
 	private IObjectMapper objectMapper;
 
-	public GraphQLSchemaBuilder() {
+	private GraphQLSchemaBuilder() {
 		typeMapperPackages.add("com.schemagen.graphql.mappers");
 		this.rootObjectBuilder = GraphQLObjectType.newObject().name("Query").description("Root of Schema");
+	}
+
+	public static GraphQLSchemaBuilder newBuilder() {
+		return new GraphQLSchemaBuilder();
 	}
 
 	/**

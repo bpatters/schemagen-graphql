@@ -1,41 +1,3 @@
-Java GraphQL Schema Generation and Execution Framework
-========
-
-# Table of Contents
-- [Overview](#overview)
-- [Dependencies](#dependencies)
-- [Hello World](#hello-world)
-- [Getting Started](#getting-started)
-
-### Overview
-
-This is a java to GraphQL schema generation and execution package. This originated the week of January 18th, 2016 as a hackweek 
-project I worked on.  The goal of this is a production level quality project that can be used to build
-a Java based GraphQL server. 
-The following principles will guide this projects evolution:
-
-- An unopinionated view of the container the server will use.
-- An unopinionated view of the serialization model you will be using
-- Sensible defaults so that setup to use is extremely easy and straightforward
-- Extensible enough to handle the most extreme Enterprise scenarios
-- A minimal set of dependencies to utlize the framework.
-
-Initial Versions will have a base version of Java 7 and require the Guava Module. Future versions will be based on Java 8 and
-possibly require the Guava module (TBD).
-
-### Dependencies
-
-- Guava (regardless if you include the guava type mapping package)
-- SLF4J (logging)
-- GraphQL-Java
-
-
-### Hello World
-
-Here is a simple hello world usage scenario
-
-```java
-
 package com.schemagen.graphql.examples;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -84,7 +46,3 @@ public class HelloWorld {
 		}
 	}
 }
-
-```
-### Getting Started
-

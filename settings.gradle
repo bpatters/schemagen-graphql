@@ -1,4 +1,5 @@
 rootProject.name = 'schemagen-graphql'
 include 'schemagen-graphql-joda'
 include 'schemagen-graphql-guava'
+include 'schemagen-graphql-examples'
 
