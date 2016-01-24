@@ -1,9 +1,7 @@
 package com.schemagen.graphql.datafetchers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import graphql.language.Field;
 import graphql.schema.DataFetchingEnvironment;
@@ -13,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -23,22 +20,17 @@ import java.util.Map;
 public class MethodDataFetcher implements IMethodDataFetcher {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MethodDataFetcher.class);
-	ObjectMapper mapper = new ObjectMapper();
+	private IObjectMapper objectMapper;
 
 	private Method method;
 	private String fieldName;
-	Object sourceObject;
-	LinkedHashMap<String, Type> parameters = new LinkedHashMap<>();
-	Map<String, Object> parameterDefaultValue = Maps.newHashMap();
+	private Object targetObject;
+	private LinkedHashMap<String, Type> parameters = new LinkedHashMap<>();
+	private Map<String, Object> parameterDefaultValue = Maps.newHashMap();
 
 	@Override
-	public void setSourceObject(Object sourceObject) {
-		this.sourceObject = sourceObject;
-	}
-
-	@Override
-	public Object getSourceObject() {
-		return sourceObject;
+	public void setTargetObject(Object targetObject) {
+		this.targetObject = targetObject;
 	}
 
 	@Override
@@ -48,9 +40,10 @@ public class MethodDataFetcher implements IMethodDataFetcher {
 			parameterDefaultValue.put(name, defaultValue.get());
 		}
 	}
+
 	private Object getDefaultValue(String name) throws Exception {
 		if (parameterDefaultValue.containsKey(name)) {
-			return convertToType(parameters.get(name),parameterDefaultValue.get(name));
+			return objectMapper.convertToType(parameters.get(name), parameterDefaultValue.get(name));
 		} else {
 			return null;
 		}
@@ -68,12 +61,14 @@ public class MethodDataFetcher implements IMethodDataFetcher {
 						Object arg = environment.getArgument(param);
 						Type paramType = parameters.get(param);
 
-						arg = convertToCollection(paramType, arg);
+						arg = objectMapper.convertToType(paramType, arg);
 
-						arguments[index] = arg == null ? getDefaultValue(param) : mapper.readValue(mapper.writeValueAsString(arg), (Class) (paramType instanceof ParameterizedType ? ((ParameterizedType)paramType).getRawType() : paramType) );
+						arguments[index] = arg == null ? getDefaultValue(param)
+								: objectMapper.convertToType(
+										(Class) (paramType instanceof ParameterizedType ? ((ParameterizedType) paramType).getRawType() : paramType), arg);
 						index++;
 					}
-					return method.invoke(sourceObject, (Object[])arguments);
+					return method.invoke(targetObject, (Object[]) arguments);
 				}
 			}
 		} catch (Exception ex) {
@@ -83,31 +78,16 @@ public class MethodDataFetcher implements IMethodDataFetcher {
 		return null;
 	}
 
-	public Object convertToType(Type type, Object value) throws Exception  {
-		return mapper.readValue(value.toString(), (Class) (type instanceof ParameterizedType ? ((ParameterizedType)type).getRawType() : type));
-	}
-
-	public Object convertToCollection(Type type, Object arg) {
-		if (arg != null && Collection.class.isAssignableFrom(arg.getClass())) {
-
-			return ImmutableList.copyOf((Collection)arg);
-		}
-
-		return arg;
-	}
-	public String getFieldName() {
-		return fieldName;
-	}
-
 	public void setFieldName(String fieldName) {
 		this.fieldName = fieldName;
 	}
 
-	public Method getMethod() {
-		return method;
-	}
-
 	public void setMethod(Method method) {
 		this.method = method;
+	}
+
+	@Override
+	public void setObjectMapper(IObjectMapper objectMapper) {
+		this.objectMapper = objectMapper;
 	}
 }

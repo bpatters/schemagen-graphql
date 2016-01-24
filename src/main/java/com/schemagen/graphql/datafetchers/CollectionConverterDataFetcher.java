@@ -1,14 +1,14 @@
 package com.schemagen.graphql.datafetchers;
 
-import java.util.Collection;
-
 import com.google.common.collect.ImmutableList;
-
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.PropertyDataFetcher;
 
+import java.util.Collection;
+
 /**
- * Created by bpatterson on 1/21/16.
+ * GraphQL only understands generic Collections and thus attempts to return a field
+ * HashSet
  */
 public class CollectionConverterDataFetcher extends PropertyDataFetcher {
 
@@ -18,6 +18,10 @@ public class CollectionConverterDataFetcher extends PropertyDataFetcher {
 	@Override
 	public Object get(DataFetchingEnvironment environment) {
 		Collection rv = (Collection)super.get(environment);
+
+		if (rv == null)  {
+			return ImmutableList.of();
+		}
 
 		return ImmutableList.copyOf(rv);
 	}

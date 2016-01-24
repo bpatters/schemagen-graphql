@@ -11,14 +11,13 @@ import java.lang.reflect.Type;
  */
 public interface IMethodDataFetcher extends DataFetcher {
 
+	void setObjectMapper(IObjectMapper objectMapper);
+
 	void setFieldName(String fieldName);
-	String getFieldName();
 
 	void setMethod(Method method);
-	Method getMethod();
 
-	void setSourceObject(Object sourceObject);
-	Object getSourceObject();
+	void setTargetObject(Object targetObject);
 
 	void addParam(String name, Type type, Optional<Object> defaultValue);
 }

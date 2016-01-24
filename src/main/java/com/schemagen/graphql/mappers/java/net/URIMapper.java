@@ -1,7 +1,7 @@
 package com.schemagen.graphql.mappers.java.net;
 
-import com.schemagen.graphql.GraphQLObjectMapper;
-import com.schemagen.graphql.GraphQLTypeMapper;
+import com.schemagen.graphql.IGraphQLObjectMapper;
+import com.schemagen.graphql.annotations.GraphQLTypeMapper;
 import com.schemagen.graphql.mappers.IGraphQLTypeMapper;
 import graphql.Scalars;
 import graphql.schema.GraphQLInputType;
@@ -21,12 +21,12 @@ public class URIMapper implements IGraphQLTypeMapper {
 		return type == URI.class;
 	}
 	@Override
-	public GraphQLOutputType getOutputType(GraphQLObjectMapper objectMapper, Type type) {
+	public GraphQLOutputType getOutputType(IGraphQLObjectMapper objectMapper, Type type) {
 		return Scalars.GraphQLString;
 	}
 
 	@Override
-	public GraphQLInputType getInputType(GraphQLObjectMapper objectMapper, Type type) {
+	public GraphQLInputType getInputType(IGraphQLObjectMapper objectMapper, Type type) {
 		return Scalars.GraphQLString;
 	}
 

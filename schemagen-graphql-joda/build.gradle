@@ -3,6 +3,11 @@ repositories {
     mavenCentral()
 }
 
+artifacts {
+    archives file('build/libs/schemagen-graphql-joda-'+project.version+".jar")
+}
+uploadArchives {
+}
 dependencies {
     compile(project(':')) {
         transitive = true
