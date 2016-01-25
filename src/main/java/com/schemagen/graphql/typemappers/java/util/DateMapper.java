@@ -1,33 +1,32 @@
-package com.schemagen.graphql.mappers.java.util;
+package com.schemagen.graphql.typemappers.java.util;
 
 import com.schemagen.graphql.IGraphQLObjectMapper;
 import com.schemagen.graphql.annotations.GraphQLTypeMapper;
-import com.schemagen.graphql.mappers.IGraphQLTypeMapper;
+import com.schemagen.graphql.typemappers.IGraphQLTypeMapper;
 import graphql.Scalars;
 import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLOutputType;
 
 import java.lang.reflect.Type;
-import java.util.TimeZone;
+import java.util.Date;
 
 /**
  * Created by bpatterson on 1/19/16.
  */
-@GraphQLTypeMapper(type=TimeZone.class)
-public class TimeZoneMapper implements IGraphQLTypeMapper {
-
+@GraphQLTypeMapper(type= Date.class)
+public class DateMapper implements IGraphQLTypeMapper {
 	public boolean handlesType(Type type) {
-		return type == TimeZone.class;
+		return type == Date.class;
 	}
 
 	@Override
 	public GraphQLOutputType getOutputType(IGraphQLObjectMapper objectMapper, Type type) {
-		return Scalars.GraphQLString;
+		return Scalars.GraphQLInt;
 	}
 
 	@Override
-	public GraphQLInputType getInputType(IGraphQLObjectMapper objectMapper, Type type) {
-		return Scalars.GraphQLString;
+	public GraphQLInputType getInputType(IGraphQLObjectMapper objectMapper,  Type type) {
+		return Scalars.GraphQLInt;
 	}
 
 }

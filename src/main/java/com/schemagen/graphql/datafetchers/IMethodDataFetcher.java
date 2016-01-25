@@ -11,7 +11,7 @@ import java.lang.reflect.Type;
  */
 public interface IMethodDataFetcher extends DataFetcher {
 
-	void setObjectMapper(IObjectMapper objectMapper);
+	void setObjectMapper(ITypeFactory objectMapper);
 
 	void setFieldName(String fieldName);
 

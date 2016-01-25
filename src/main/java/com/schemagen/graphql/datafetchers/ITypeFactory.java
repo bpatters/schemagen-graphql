@@ -5,7 +5,7 @@ import java.lang.reflect.Type;
 /**
  * Created by bpatterson on 1/22/16.
  */
-public interface IObjectMapper {
+public interface ITypeFactory {
 	/**
 	 * This object needs to know how to convert objects to the specified type. This is used
 	 * to convert query Parameters to the correct type before method invocation.

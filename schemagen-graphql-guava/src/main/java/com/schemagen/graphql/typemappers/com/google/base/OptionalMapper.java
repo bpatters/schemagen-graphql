@@ -1,9 +1,9 @@
-package com.schemagen.graphql.mappers.com.google.base;
+package com.schemagen.graphql.typemappers.com.google.base;
 
 import com.google.common.base.Optional;
 import com.schemagen.graphql.IGraphQLObjectMapper;
 import com.schemagen.graphql.annotations.GraphQLTypeMapper;
-import com.schemagen.graphql.mappers.IGraphQLTypeMapper;
+import com.schemagen.graphql.typemappers.IGraphQLTypeMapper;
 import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLOutputType;
 

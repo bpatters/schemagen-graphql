@@ -1,13 +1,14 @@
 package com.schemagen.graphql;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.ClassPath;
 import com.schemagen.graphql.annotations.GraphQLQueryable;
-import com.schemagen.graphql.datafetchers.IObjectMapper;
+import com.schemagen.graphql.datafetchers.ITypeFactory;
 import com.schemagen.graphql.impl.GraphQLObjectMapper;
-import com.schemagen.graphql.mappers.IGraphQLTypeMapper;
+import com.schemagen.graphql.typemappers.IGraphQLTypeMapper;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 import org.slf4j.Logger;
@@ -30,10 +31,10 @@ public class GraphQLSchemaBuilder {
 	private Optional<List<String>> queryHandlerPackages = Optional.absent();
 	private Optional<List<IGraphQLTypeMapper>> typeMappers = Optional.absent();
 	private List<String> typeMapperPackages = new ArrayList<String>();
-	private IObjectMapper objectMapper;
+	private ITypeFactory objectMapper;
 
 	private GraphQLSchemaBuilder() {
-		typeMapperPackages.add("com.schemagen.graphql.mappers");
+		typeMapperPackages.add("com.schemagen.graphql.typemappers");
 		this.rootObjectBuilder = GraphQLObjectType.newObject().name("Query").description("Root of Schema");
 	}
 
@@ -94,14 +95,14 @@ public class GraphQLSchemaBuilder {
 	 * @param objectMapper
 	 * @return
 	 */
-	public GraphQLSchemaBuilder registerObjectMapper(IObjectMapper objectMapper) {
+	public GraphQLSchemaBuilder registerObjectMapper(ITypeFactory objectMapper) {
 		this.objectMapper = objectMapper;
 
 		return this;
 	}
 
 	public GraphQLSchema build() {
-		this.graphQLObjectMapper = new GraphQLObjectMapper(objectMapper, typeMappers, Optional.of(typeMapperPackages));
+		this.setGraphQLObjectMapper(new GraphQLObjectMapper(objectMapper, typeMappers, Optional.of(typeMapperPackages)));
 		if (queryHandlerPackages.isPresent()) {
 			try {
 				ClassLoader classLoader = getClass().getClassLoader();
@@ -115,7 +116,7 @@ public class GraphQLSchemaBuilder {
 							if (graphQLQueryable != null) {
 								LOGGER.info("Identified {} as GraphQuerySupported type.", type.getCanonicalName());
 								rootObjectBuilder.fields(
-										graphQLQueryable.queryFactory().newInstance().newMethodQueriesForObject(graphQLObjectMapper, type.newInstance()));
+										graphQLQueryable.queryFactory().newInstance().newMethodQueriesForObject(getGraphQLObjectMapper(), type.newInstance()));
 							}
 						} catch (NoClassDefFoundError ex) {
 							LOGGER.warn("Failed to load {}.  This is probably because of an unsatisfied runtime dependency.", ex);
@@ -130,7 +131,7 @@ public class GraphQLSchemaBuilder {
 			for (Object queryHandler : queryHandlers.get()) {
 				GraphQLQueryable graphQLQueryable = queryHandler.getClass().getAnnotation(GraphQLQueryable.class);
 				try {
-					rootObjectBuilder.fields(graphQLQueryable.queryFactory().newInstance().newMethodQueriesForObject(graphQLObjectMapper, queryHandler));
+					rootObjectBuilder.fields(graphQLQueryable.queryFactory().newInstance().newMethodQueriesForObject(getGraphQLObjectMapper(), queryHandler));
 				} catch (InstantiationException | IllegalAccessException ex) {
 					LOGGER.warn("Failed to load {}.  This is probably because of an unsatisfied runtime dependency.", ex);
 				}
@@ -140,5 +141,15 @@ public class GraphQLSchemaBuilder {
 		schema = GraphQLSchema.newSchema().query(rootObjectBuilder.build()).build();
 
 		return schema;
+	}
+
+	@VisibleForTesting
+	GraphQLObjectMapper getGraphQLObjectMapper() {
+		return graphQLObjectMapper;
+	}
+
+	@VisibleForTesting
+	void setGraphQLObjectMapper(GraphQLObjectMapper graphQLObjectMapper) {
+		this.graphQLObjectMapper = graphQLObjectMapper;
 	}
 }

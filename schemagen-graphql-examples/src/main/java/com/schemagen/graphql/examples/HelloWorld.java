@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.schemagen.graphql.GraphQLSchemaBuilder;
 import com.schemagen.graphql.annotations.GraphQLQuery;
 import com.schemagen.graphql.annotations.GraphQLQueryable;
-import com.schemagen.graphql.examples.common.JacksonObjectMapper;
+import com.schemagen.graphql.examples.common.JacksonTypeFactory;
 
 import graphql.ExecutionResult;
 import graphql.GraphQL;
@@ -30,7 +30,7 @@ public class HelloWorld {
 		ObjectMapper objectMapper = new ObjectMapper();
 		GraphQLSchema schema = GraphQLSchemaBuilder.newBuilder()
 				// register an object mappper so that parameter datatypes can be deserialized for method invocation
-				.registerObjectMapper(new JacksonObjectMapper(objectMapper))
+				.registerObjectMapper(new JacksonTypeFactory(objectMapper))
 				// register the instance of Hello World as our query handler
 				.registerQueryHandlers(ImmutableList.<Object>of(helloWorld))
 				.build();

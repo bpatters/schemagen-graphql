@@ -1,6 +1,6 @@
 package com.schemagen.graphql;
 
-import com.schemagen.graphql.datafetchers.IObjectMapper;
+import com.schemagen.graphql.datafetchers.ITypeFactory;
 import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLOutputType;
 
@@ -41,5 +41,5 @@ public interface IGraphQLObjectMapper {
 	 * Returns the object responsible for object type conversion.
 	 * @return
 	 */
-	IObjectMapper getObjectMapper();
+	ITypeFactory getObjectMapper();
 }

@@ -1,8 +1,8 @@
 package com.schemagen.graphql.impl;
 
 import com.google.common.base.Optional;
-import com.schemagen.graphql.datafetchers.IObjectMapper;
-import com.schemagen.graphql.mappers.IGraphQLTypeMapper;
+import com.schemagen.graphql.datafetchers.ITypeFactory;
+import com.schemagen.graphql.typemappers.IGraphQLTypeMapper;
 import graphql.Scalars;
 import graphql.schema.GraphQLOutputType;
 import org.junit.Before;
@@ -20,11 +20,11 @@ import static org.mockito.Mockito.mock;
  */
 public class GraphQLObjectMapperTest {
 	@Mock
-	IObjectMapper objectMapper;
+	ITypeFactory objectMapper;
 
 	@Before
 	public void setup() {
-		objectMapper = mock(IObjectMapper.class);
+		objectMapper = mock(ITypeFactory.class);
 	}
 
 	private void assertTypeMapping(String name, GraphQLOutputType expectedType, GraphQLOutputType graphQLOutputType) {

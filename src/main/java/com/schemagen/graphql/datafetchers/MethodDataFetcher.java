@@ -20,7 +20,7 @@ import java.util.Map;
 public class MethodDataFetcher implements IMethodDataFetcher {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MethodDataFetcher.class);
-	private IObjectMapper objectMapper;
+	private ITypeFactory objectMapper;
 
 	private Method method;
 	private String fieldName;
@@ -87,7 +87,7 @@ public class MethodDataFetcher implements IMethodDataFetcher {
 	}
 
 	@Override
-	public void setObjectMapper(IObjectMapper objectMapper) {
+	public void setObjectMapper(ITypeFactory objectMapper) {
 		this.objectMapper = objectMapper;
 	}
 }

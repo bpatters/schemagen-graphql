@@ -1,9 +1,9 @@
-package com.schemagen.graphql.mappers.java.util;
+package com.schemagen.graphql.typemappers.java.util;
 
 import com.schemagen.graphql.IGraphQLObjectMapper;
 import com.schemagen.graphql.annotations.GraphQLTypeMapper;
 import com.schemagen.graphql.exceptions.NotMappableException;
-import com.schemagen.graphql.mappers.IGraphQLTypeMapper;
+import com.schemagen.graphql.typemappers.IGraphQLTypeMapper;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLInputObjectField;
 import graphql.schema.GraphQLInputObjectType;

@@ -1,22 +1,23 @@
-package com.schemagen.graphql.mappers.org.joda.time;
+package com.schemagen.graphql.typemappers.java.util;
 
 import com.schemagen.graphql.IGraphQLObjectMapper;
 import com.schemagen.graphql.annotations.GraphQLTypeMapper;
-import com.schemagen.graphql.mappers.IGraphQLTypeMapper;
+import com.schemagen.graphql.typemappers.IGraphQLTypeMapper;
 import graphql.Scalars;
 import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLOutputType;
-import org.joda.time.DateTime;
 
 import java.lang.reflect.Type;
+import java.util.TimeZone;
 
 /**
  * Created by bpatterson on 1/19/16.
  */
-@GraphQLTypeMapper(type=DateTime.class)
-public class DateTimeMapper implements IGraphQLTypeMapper {
+@GraphQLTypeMapper(type=TimeZone.class)
+public class TimeZoneMapper implements IGraphQLTypeMapper {
+
 	public boolean handlesType(Type type) {
-		return type == DateTime.class;
+		return type == TimeZone.class;
 	}
 
 	@Override
@@ -25,7 +26,7 @@ public class DateTimeMapper implements IGraphQLTypeMapper {
 	}
 
 	@Override
-	public GraphQLInputType getInputType(IGraphQLObjectMapper objectMapper,  Type type) {
+	public GraphQLInputType getInputType(IGraphQLObjectMapper objectMapper, Type type) {
 		return Scalars.GraphQLString;
 	}
 

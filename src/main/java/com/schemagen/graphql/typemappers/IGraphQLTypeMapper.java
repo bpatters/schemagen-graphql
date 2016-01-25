@@ -1,4 +1,4 @@
-package com.schemagen.graphql.mappers;
+package com.schemagen.graphql.typemappers;
 
 import com.schemagen.graphql.IGraphQLObjectMapper;
 import graphql.schema.GraphQLInputType;

@@ -1,16 +1,5 @@
-group 'com.schemagen.graphql'
-version '0.1-SNAPSHOT'
-
-apply plugin: 'java'
-
-sourceCompatibility = 1.7
-
 ext {
     jacksonVersion = "2.5.1";
-}
-
-repositories {
-    mavenCentral()
 }
 
 dependencies {

@@ -3,8 +3,8 @@ package com.schemagen.graphql.impl;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
-import com.schemagen.graphql.datafetchers.IObjectMapper;
-import com.schemagen.graphql.mappers.IGraphQLTypeMapper;
+import com.schemagen.graphql.datafetchers.ITypeFactory;
+import com.schemagen.graphql.typemappers.IGraphQLTypeMapper;
 import graphql.Scalars;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLList;
@@ -38,7 +38,7 @@ import static org.junit.Assert.assertNotNull;
  */
 public class GraphQLObjectMapper_CollectionsTest {
 	@Mock
-	IObjectMapper objectMapper;
+	ITypeFactory objectMapper;
 	GraphQLObjectMapper graphQLObjectMapper;
 	GraphQLObjectType expectedObjectType;
 
@@ -61,7 +61,7 @@ public class GraphQLObjectMapper_CollectionsTest {
 				.build();
 
 		graphQLObjectMapper = new GraphQLObjectMapper(objectMapper, Optional.<List<IGraphQLTypeMapper>>absent(),
-				Optional.<List<String>>of(ImmutableList.of("com.schemagen.graphql.mappers")));
+				Optional.<List<String>>of(ImmutableList.of("com.schemagen.graphql.typemappers")));
 	}
 
 	private void assertGenericListTypeMapping(String name, GraphQLOutputType expectedWrappedType, GraphQLOutputType graphQLOutputType) {

@@ -1,8 +1,8 @@
-package com.schemagen.graphql.mappers.java.net;
+package com.schemagen.graphql.typemappers.java.net;
 
 import com.schemagen.graphql.IGraphQLObjectMapper;
 import com.schemagen.graphql.annotations.GraphQLTypeMapper;
-import com.schemagen.graphql.mappers.IGraphQLTypeMapper;
+import com.schemagen.graphql.typemappers.IGraphQLTypeMapper;
 import graphql.Scalars;
 import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLOutputType;

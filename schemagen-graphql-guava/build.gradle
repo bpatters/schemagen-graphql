@@ -1,12 +1,3 @@
-repositories {
-    mavenLocal();
-    mavenCentral()
-}
-artifacts {
-    archives file('build/libs/schemagen-graphql-guava-'+project.version+".jar")
-}
-uploadArchives {
-}
 dependencies {
     compile(project(':')) {
         transitive = true
