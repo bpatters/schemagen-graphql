@@ -31,7 +31,7 @@ public class GraphQLSchemaBuilder {
 	private Optional<List<String>> queryHandlerPackages = Optional.absent();
 	private Optional<List<IGraphQLTypeMapper>> typeMappers = Optional.absent();
 	private List<String> typeMapperPackages = new ArrayList<String>();
-	private ITypeFactory objectMapper;
+	private ITypeFactory typeFactory;
 
 	private GraphQLSchemaBuilder() {
 		typeMapperPackages.add("com.schemagen.graphql.typemappers");
@@ -95,14 +95,14 @@ public class GraphQLSchemaBuilder {
 	 * @param objectMapper
 	 * @return
 	 */
-	public GraphQLSchemaBuilder registerObjectMapper(ITypeFactory objectMapper) {
-		this.objectMapper = objectMapper;
+	public GraphQLSchemaBuilder registerTypeFactory(ITypeFactory objectMapper) {
+		this.typeFactory = objectMapper;
 
 		return this;
 	}
 
 	public GraphQLSchema build() {
-		this.setGraphQLObjectMapper(new GraphQLObjectMapper(objectMapper, typeMappers, Optional.of(typeMapperPackages)));
+		this.setGraphQLObjectMapper(new GraphQLObjectMapper(typeFactory, typeMappers, Optional.of(typeMapperPackages)));
 		if (queryHandlerPackages.isPresent()) {
 			try {
 				ClassLoader classLoader = getClass().getClassLoader();

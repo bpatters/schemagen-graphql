@@ -30,7 +30,7 @@ public class HelloWorld {
 		ObjectMapper objectMapper = new ObjectMapper();
 		GraphQLSchema schema = GraphQLSchemaBuilder.newBuilder()
 				// register an object mappper so that parameter datatypes can be deserialized for method invocation
-				.registerObjectMapper(new JacksonTypeFactory(objectMapper))
+				.registerTypeFactory(new JacksonTypeFactory(objectMapper))
 				// register the instance of Hello World as our query handler
 				.registerQueryHandlers(ImmutableList.<Object>of(helloWorld))
 				.build();
