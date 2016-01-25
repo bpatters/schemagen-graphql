@@ -7,7 +7,7 @@ def releaseVersion = System.properties.RELEASE_VERSION
 
 allprojects {
     description "This provides type introspection and generation of GraphQL from Pojos."
-    group 'com.schemagen.graphql'
+    group 'com.bretpatterson'
 
     apply plugin: 'java'
     apply plugin: 'maven'
