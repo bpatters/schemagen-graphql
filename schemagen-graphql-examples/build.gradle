@@ -6,7 +6,64 @@ dependencies {
     compile(project(':')) {
         transitive = true
     }
-    compile( "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}");
-    compile( "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}");
+    compile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}");
+    compile("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}");
     testCompile group: 'junit', name: 'junit', version: '4.11'
+}
+
+publishing {
+    publications {
+        schemagenGraphQLExamples(MavenPublication) {
+            version version
+            from components.java
+
+            artifact sourcesJar {
+                classifier "sources"
+            }
+            artifact javadocJar {
+                classifier "javadoc"
+            }
+            pom.withXml {
+                asNode().children().last() + {
+                    resolveStrategy = Closure.DELEGATE_FIRST
+                    name project.name
+                    description project.description
+
+                    url "https://github.com/bpatters/schemagen-graphql"
+                    scm {
+                        url "https://github.com/bpatters/schemagen-graphql"
+                        connection "https://github.com/bpatters/schemagen-graphql"
+                        developerConnection "https://github.com/bpatters/schemagen-graphql"
+                    }
+                    licenses {
+                        license {
+                            name 'MIT'
+                            url 'https://github.com/bpatters/schemagen-graphql/blob/master/LICENSE.md'
+                            distribution 'repo'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id 'bpatters'
+                            name 'Bret Patterson'
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+bintray {
+    user = System.env.BINTRAY_USER ?: project["bintray.user"]
+    key = System.env.BINTRAY_API_KEY ?: project["bintray.key"]
+    publications = ['schemagenGraphQLExamples']
+    publish = true
+    pkg {
+        repo = 'schemagen-graphql'
+        name = 'schemagen-graphql-examples'
+        desc = 'Examples GraphQL Schema generation in Java'
+        licenses = ['MIT']
+        vcsUrl = 'https://github.com/bpatters/schemagen-graphql'
+    }
 }

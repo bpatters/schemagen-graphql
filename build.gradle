@@ -1,6 +1,7 @@
 import java.text.SimpleDateFormat
+
 plugins {
-    id "com.jfrog.bintray" version "1.2"
+    id "com.jfrog.bintray" version "1.4"
 }
 
 def releaseVersion = System.properties.RELEASE_VERSION
@@ -11,7 +12,9 @@ allprojects {
 
     apply plugin: 'java'
     apply plugin: 'maven'
+    apply plugin: 'signing'
     apply plugin: 'maven-publish'
+    apply plugin: 'com.jfrog.bintray'
 
     version = releaseVersion ? releaseVersion : new SimpleDateFormat('yyyy-MM-dd\'T\'HH-mm-ss').format(new Date())
 
@@ -43,7 +46,7 @@ allprojects {
 
     publishing {
         publications {
-            graphqlJava(MavenPublication) {
+            schemagenGraphQL(MavenPublication) {
                 version version
                 from components.java
 
@@ -58,6 +61,7 @@ allprojects {
                         resolveStrategy = Closure.DELEGATE_FIRST
                         name project.name
                         description project.description
+
                         url "https://github.com/bpatters/schemagen-graphql"
                         scm {
                             url "https://github.com/bpatters/schemagen-graphql"
@@ -99,6 +103,53 @@ allprojects {
 
     sourceCompatibility = 1.7
     targetCompatibility = 1.7
+
+    ossrhUsername = System.env.OSSRH_USER ?: project["ossrh.user"]
+    ossrhPassword = System.env.OSSRH_PASSWORD ?: project["ossrh.password"]
+
+    repositories {
+        mavenDeployer {
+          beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+          repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+            authentication(userName: ossrhUsername, password: ossrhPassword)
+          }
+
+          snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+            authentication(userName: ossrhUsername, password: ossrhPassword)
+          }
+
+          pom.project {
+            name 'GraphQL for 
+            packaging 'jar'
+            // optionally artifactId can be defined here
+            description 'A application used as an example on how to set up
+              pushing  its components to the Central Repository.'
+            url 'http://www.example.com/example-application'
+
+            scm {
+              connection 'scm:svn:http://foo.googlecode.com/svn/trunk/'
+              developerConnection 'scm:svn:https://foo.googlecode.com/svn/trunk/'
+              url 'http://foo.googlecode.com/svn/trunk/'
+            }
+
+            licenses {
+              license {
+                name 'The Apache License, Version 2.0'
+                url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+              }
+            }
+
+            developers {
+              developer {
+                id 'manfred'
+                name 'Manfred Moser'
+                email 'manfred@sonatype.com'
+              }
+            }
+          }
+        }
+      }
 
 }
 
