@@ -34,7 +34,7 @@ public class MapMapper implements IGraphQLTypeMapper {
 
 			Type[] paramTypes = parameterizedType.getActualTypeArguments();
 			if (((Class) paramTypes[0]).isEnum()) {
-				GraphQLObjectType.Builder glType = GraphQLObjectType.newObject().name(rawClass.getSimpleName());
+				GraphQLObjectType.Builder glType = GraphQLObjectType.newObject().name(graphQLObjectMapper.getTypeNamingStrategy().getTypeName(rawClass));
 				Class enumClassType = (Class) paramTypes[0];
 				for (Object value : EnumSet.allOf(enumClassType)) {
 					glType.field(GraphQLFieldDefinition.newFieldDefinition()
@@ -60,7 +60,7 @@ public class MapMapper implements IGraphQLTypeMapper {
 
 			Type[] paramTypes = parameterizedType.getActualTypeArguments();
 			if (((Class) paramTypes[0]).isEnum()) {
-				GraphQLInputObjectType.Builder glType = GraphQLInputObjectType.newInputObject().name(rawClass.getSimpleName());
+				GraphQLInputObjectType.Builder glType = GraphQLInputObjectType.newInputObject().name(graphQLObjectMapper.getTypeNamingStrategy().getTypeName(rawClass));
 				Class enumClassType = (Class) paramTypes[0];
 				for (Object value : EnumSet.allOf(enumClassType)) {
 					glType.field(GraphQLInputObjectField.newInputObjectField()

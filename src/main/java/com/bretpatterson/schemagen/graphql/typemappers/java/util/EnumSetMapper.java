@@ -26,7 +26,8 @@ public class EnumSetMapper implements IGraphQLTypeMapper {
 	public GraphQLOutputType getOutputType(IGraphQLObjectMapper graphQLObjectMapper, Type type) {
 		Class classType = (Class) type;
 		Class enumClassType = classType.getComponentType();
-		GraphQLEnumType.Builder enumType = GraphQLEnumType.newEnum().name(enumClassType.getSimpleName());
+		GraphQLEnumType.Builder enumType = GraphQLEnumType.newEnum()
+				.name(graphQLObjectMapper.getTypeNamingStrategy().getTypeName(enumClassType));
 
 		for (Object value : EnumSet.allOf(enumClassType)) {
 			enumType.value(value.toString(), value);
@@ -39,7 +40,8 @@ public class EnumSetMapper implements IGraphQLTypeMapper {
 	public GraphQLInputType getInputType(IGraphQLObjectMapper graphQLObjectMapper, Type type) {
 		Class classType = (Class) type;
 		Class enumClassType = classType.getComponentType();
-		GraphQLEnumType.Builder enumType = GraphQLEnumType.newEnum().name(enumClassType.getSimpleName());
+		GraphQLEnumType.Builder enumType = GraphQLEnumType.newEnum()
+				.name(graphQLObjectMapper.getTypeNamingStrategy().getTypeName(enumClassType));
 
 		for (Object value : EnumSet.allOf(enumClassType)) {
 			enumType.value(value.toString(), value);

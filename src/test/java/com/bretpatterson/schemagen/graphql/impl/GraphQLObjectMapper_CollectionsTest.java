@@ -1,5 +1,6 @@
 package com.bretpatterson.schemagen.graphql.impl;
 
+import com.bretpatterson.schemagen.graphql.ITypeNamingStrategy;
 import com.bretpatterson.schemagen.graphql.datafetchers.ITypeFactory;
 import com.bretpatterson.schemagen.graphql.typemappers.IGraphQLTypeMapper;
 import com.google.common.base.Optional;
@@ -61,7 +62,8 @@ public class GraphQLObjectMapper_CollectionsTest {
 				.build();
 
 		graphQLObjectMapper = new GraphQLObjectMapper(objectMapper, Optional.<List<IGraphQLTypeMapper>>absent(),
-				Optional.<List<String>>of(ImmutableList.of(IGraphQLTypeMapper.class.getPackage().getName())));
+				Optional.<List<String>>of(ImmutableList.of(IGraphQLTypeMapper.class.getPackage().getName())),
+				Optional.<ITypeNamingStrategy>absent());
 	}
 
 	private void assertGenericListTypeMapping(String name, GraphQLOutputType expectedWrappedType, GraphQLOutputType graphQLOutputType) {

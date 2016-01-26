@@ -31,10 +31,11 @@ public class GraphQLSchemaBuilder {
 	private Optional<List<String>> queryHandlerPackages = Optional.absent();
 	private Optional<List<IGraphQLTypeMapper>> typeMappers = Optional.absent();
 	private List<String> typeMapperPackages = new ArrayList<String>();
+	private Optional<ITypeNamingStrategy> typeNamingStrategy = Optional.absent();
 	private ITypeFactory typeFactory;
 
 	private GraphQLSchemaBuilder() {
-		typeMapperPackages.add("com.schemagen.graphql.typemappers");
+		typeMapperPackages.add(IGraphQLTypeMapper.class.getPackage().getName());
 		this.rootObjectBuilder = GraphQLObjectType.newObject().name("Query").description("Root of Schema");
 	}
 
@@ -101,8 +102,14 @@ public class GraphQLSchemaBuilder {
 		return this;
 	}
 
+	public GraphQLSchemaBuilder registerTypeNamingStrategy(ITypeNamingStrategy strategy) {
+		typeNamingStrategy = Optional.fromNullable(strategy);
+
+		return this;
+	}
+
 	public GraphQLSchema build() {
-		this.setGraphQLObjectMapper(new GraphQLObjectMapper(typeFactory, typeMappers, Optional.of(typeMapperPackages)));
+		this.setGraphQLObjectMapper(new GraphQLObjectMapper(typeFactory, typeMappers, Optional.of(typeMapperPackages), typeNamingStrategy));
 		if (queryHandlerPackages.isPresent()) {
 			try {
 				ClassLoader classLoader = getClass().getClassLoader();

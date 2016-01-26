@@ -12,6 +12,12 @@ import java.lang.reflect.Type;
 public interface IGraphQLObjectMapper {
 
 	/**
+	 * Get the object responsible for naming GraphQL types.
+	 * @return
+	 */
+	ITypeNamingStrategy getTypeNamingStrategy();
+
+	/**
 	 * Get an input definition for the specified type.
 	 * @param type
 	 */

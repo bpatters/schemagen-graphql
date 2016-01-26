@@ -3,6 +3,7 @@ package com.bretpatterson.schemagen.graphql.impl;
 import com.bretpatterson.schemagen.graphql.IGraphQLObjectMapper;
 import com.bretpatterson.schemagen.graphql.IGraphQLTypeCache;
 import com.bretpatterson.schemagen.graphql.IQueryFactory;
+import com.bretpatterson.schemagen.graphql.ITypeNamingStrategy;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLQueryable;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
 import com.bretpatterson.schemagen.graphql.datafetchers.CollectionConverterDataFetcher;
@@ -51,10 +52,18 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper {
 	IGraphQLTypeCache<GraphQLOutputType> outputTypeCache = new GraphQLTypeCache<>();
 	IGraphQLTypeCache<GraphQLInputType> inputTypeCache = new GraphQLTypeCache<>();
 	ITypeFactory objectMapper;
+	ITypeNamingStrategy typeNamingStrategy = new SimpleTypeNamingStrategy();
 
-	public GraphQLObjectMapper(ITypeFactory objectMapper, Optional<List<IGraphQLTypeMapper>> graphQLTypeMappers, Optional<List<String>> typeMappingPackageNames) {
+
+	public GraphQLObjectMapper(ITypeFactory objectMapper,
+							   Optional<List<IGraphQLTypeMapper>> graphQLTypeMappers,
+							   Optional<List<String>> typeMappingPackageNames,
+							   Optional<ITypeNamingStrategy> typeNamingStrategy) {
 
 		this.objectMapper = objectMapper;
+		if (typeNamingStrategy.isPresent()) {
+			this.typeNamingStrategy = typeNamingStrategy.get();
+		}
 
 		ImmutableList.Builder<IGraphQLTypeMapper> interfaceTypeMappersBuilder = ImmutableList.builder();
 		Map<Type, IGraphQLTypeMapper> classTypeMappersBuilder = Maps.newHashMap();
@@ -182,7 +191,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper {
 			if (graphQLType.isPresent()) {
 				outputTypeCache.put(type, graphQLType.get());
 			} else if (classType.isEnum()) {
-				GraphQLEnumType.Builder enumType = GraphQLEnumType.newEnum().name(classType.getSimpleName());
+				GraphQLEnumType.Builder enumType = GraphQLEnumType.newEnum().name(typeNamingStrategy.getTypeName(classType));
 				for (Object value : EnumSet.allOf(classType)) {
 					enumType.value(value.toString(), value);
 				}
@@ -253,8 +262,8 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper {
 	private GraphQLObjectType buildObject(Type type, Class classType) {
 		try {
 			// object types we create an object type and then recursively call ourselves to get the field types
-			GraphQLObjectType.Builder glType = GraphQLObjectType.newObject().name(classType.getSimpleName());
-			GraphQLTypeReference glTypeReference = new GraphQLTypeReference(classType.getSimpleName());
+			GraphQLObjectType.Builder glType = GraphQLObjectType.newObject().name(typeNamingStrategy.getTypeName(classType));
+			GraphQLTypeReference glTypeReference = new GraphQLTypeReference(typeNamingStrategy.getTypeName(classType));
 			ImmutableList.Builder<GraphQLFieldDefinition> fields = ImmutableList.builder();
 
 			outputTypeCache.put(type, glTypeReference);
@@ -293,4 +302,12 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper {
 		return (GraphQLObjectType) outputTypeCache.get(type);
 	}
 
+	@Override
+	public ITypeNamingStrategy getTypeNamingStrategy() {
+		return typeNamingStrategy;
+	}
+
+	public void setTypeNamingStrategy(ITypeNamingStrategy typeNamingStrategy) {
+		this.typeNamingStrategy = typeNamingStrategy;
+	}
 }
