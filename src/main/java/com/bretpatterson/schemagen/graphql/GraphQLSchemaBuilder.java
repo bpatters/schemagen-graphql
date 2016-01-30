@@ -1,21 +1,29 @@
 package com.bretpatterson.schemagen.graphql;
 
-import com.bretpatterson.schemagen.graphql.annotations.GraphQLQueryable;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLController;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
 import com.bretpatterson.schemagen.graphql.datafetchers.ITypeFactory;
+import com.bretpatterson.schemagen.graphql.impl.GraphQLObjectMapper;
 import com.bretpatterson.schemagen.graphql.typemappers.IGraphQLTypeMapper;
+import com.bretpatterson.schemagen.graphql.utils.AnnotationUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.reflect.ClassPath;
-import com.bretpatterson.schemagen.graphql.impl.GraphQLObjectMapper;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import relay.IRelayNodeFactory;
+import relay.annotations.RelayNodeFactory;
+import relay.impl.RelayDefaultNodeHandler;
 
-import java.util.ArrayList;
+import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by bpatterson on 1/18/16.
@@ -25,18 +33,27 @@ public class GraphQLSchemaBuilder {
 	private static final Logger LOGGER = LoggerFactory.getLogger(GraphQLSchemaBuilder.class);
 
 	private GraphQLSchema schema;
-	private GraphQLObjectType.Builder rootObjectBuilder;
+	private GraphQLObjectType.Builder rootQueryBuilder;
+	private GraphQLObjectType.Builder rootMutationBuilder;
 	private GraphQLObjectMapper graphQLObjectMapper;
-	private Optional<List<Object>> queryHandlers = Optional.absent();
-	private Optional<List<String>> queryHandlerPackages = Optional.absent();
-	private Optional<List<IGraphQLTypeMapper>> typeMappers = Optional.absent();
-	private List<String> typeMapperPackages = new ArrayList<String>();
+	private List<Object> graphQLControllers = new LinkedList<>();
+	private List<IGraphQLTypeMapper> typeMappers = new LinkedList<>();
 	private Optional<ITypeNamingStrategy> typeNamingStrategy = Optional.absent();
+	private RelayDefaultNodeHandler.Builder relayDefaultNodeHandler = RelayDefaultNodeHandler.builder();
+	private List<Class> relayNodeTypes = Lists.newArrayList();
 	private ITypeFactory typeFactory;
+	ClassLoader classLoader;
+	ClassPath classPath;
 
 	private GraphQLSchemaBuilder() {
-		typeMapperPackages.add(IGraphQLTypeMapper.class.getPackage().getName());
-		this.rootObjectBuilder = GraphQLObjectType.newObject().name("Query").description("Root of Schema");
+		this.rootQueryBuilder = GraphQLObjectType.newObject().name("Query").description("Root of Query Schema");
+		this.rootMutationBuilder = GraphQLObjectType.newObject().name("Mutation").description("Root of Mutation Schema");
+		try {
+			classLoader = getClass().getClassLoader();
+			classPath = ClassPath.from(classLoader);
+		} catch (IOException ex) {
+			Throwables.propagate(ex);
+		}
 	}
 
 	public static GraphQLSchemaBuilder newBuilder() {
@@ -45,107 +62,108 @@ public class GraphQLSchemaBuilder {
 
 	/**
 	 * Register objects to be scanned as containing top level query fields
+	 * 
 	 * @param queryHandlers
 	 * @return
 	 */
-	public GraphQLSchemaBuilder registerQueryHandlers(List<Object> queryHandlers) {
-		this.queryHandlers = Optional.of(queryHandlers);
+	public GraphQLSchemaBuilder registerGraphQLContollerObjects(List<Object> queryHandlers) {
+		this.graphQLControllers.addAll(queryHandlers);
 
 		return this;
 	}
 
 	/**
-	 * Register packages to be scanned for annotated classes to build top level queries from.
-	 * @param queryHandlerPackages
-	 * @return
-	 */
-	public GraphQLSchemaBuilder registerQueryHandlerPackages(List<String> queryHandlerPackages) {
-		this.queryHandlerPackages = Optional.of(queryHandlerPackages);
-
-		return this;
-	}
-
-	/**
-	 * Register custom type mapper instances that can be used to convert types to GraphQLTypes.
-	 * These type mappers will have precidence over any other types discovered.
+	 * Register custom type mapper instances that can be used to convert types to GraphQLTypes. These type mappers will have precidence over
+	 * any other types discovered.
+	 * 
 	 * @param typeMappers
 	 * @return
 	 */
 	public GraphQLSchemaBuilder registerTypeMappers(List<IGraphQLTypeMapper> typeMappers) {
-		this.typeMappers = Optional.of(typeMappers);
+		this.typeMappers.addAll(typeMappers);
 
 		return this;
 	}
 
 	/**
-	 * Registers a set of packages to be scanned for custom type mappers. These will have precidence over
-	 * the built in type converters for the same types.
-	 * @param typeMapperPackages
+	 * This typeFactory will be used to convert between GraphQL value types to Java native value types when passing parameters to
+	 * DataFetchers. This object will be assigned to all datafetchers created for GraphQL queries and mutations.
+	 * 
+	 * @param typeFactory
 	 * @return
 	 */
-	public GraphQLSchemaBuilder registerTypeMapperPackages(List<String> typeMapperPackages) {
-		this.typeMapperPackages.addAll(typeMapperPackages);
+	public GraphQLSchemaBuilder registerTypeFactory(ITypeFactory typeFactory) {
+		this.typeFactory = typeFactory;
 
 		return this;
 	}
 
 	/**
-	 * This objectmapper will be used to convert between GraphQL value types to Java native value types when
-	 * passing parameters to DataFetchers. This object will be assigned to all datafetchers created for
-	 * GraphQL queries
-	 * @param objectMapper
+	 * Register a new Type Naming strategy to be used in place of the default SimpleTypeNamingStrategy See {@link ITypeNamingStrategy}
+	 * 
+	 * @param strategy
 	 * @return
 	 */
-	public GraphQLSchemaBuilder registerTypeFactory(ITypeFactory objectMapper) {
-		this.typeFactory = objectMapper;
-
-		return this;
-	}
-
 	public GraphQLSchemaBuilder registerTypeNamingStrategy(ITypeNamingStrategy strategy) {
 		typeNamingStrategy = Optional.fromNullable(strategy);
 
 		return this;
 	}
 
-	public GraphQLSchema build() {
-		this.setGraphQLObjectMapper(new GraphQLObjectMapper(typeFactory, typeMappers, Optional.of(typeMapperPackages), typeNamingStrategy));
-		if (queryHandlerPackages.isPresent()) {
-			try {
-				ClassLoader classLoader = getClass().getClassLoader();
-				ClassPath classPath = ClassPath.from(classLoader);
-				for (String packageName : queryHandlerPackages.get()) {
-					ImmutableSet<ClassPath.ClassInfo> classes = classPath.getTopLevelClassesRecursive(packageName);
-					for (ClassPath.ClassInfo info : classes) {
-						try {
-							Class<?> type = info.load();
-							GraphQLQueryable graphQLQueryable = type.getAnnotation(GraphQLQueryable.class);
-							if (graphQLQueryable != null) {
-								LOGGER.info("Identified {} as GraphQuerySupported type.", type.getCanonicalName());
-								rootObjectBuilder.fields(
-										graphQLQueryable.queryFactory().newInstance().newMethodQueriesForObject(getGraphQLObjectMapper(), type.newInstance()));
-							}
-						} catch (NoClassDefFoundError ex) {
-							LOGGER.warn("Failed to load {}.  This is probably because of an unsatisfied runtime dependency.", ex);
-						}
-					}
-				}
-			} catch (Exception ex) {
-				Throwables.propagate(ex);
-			}
+	/**
+	 * Register your Relay Node Factory instances for handling mapping from node id's to objects.
+	 * 
+	 * @see <a href="https://facebook.github.io/relay/graphql/objectidentification.htm">Graph QL Relay Object Identification</a>
+	 *
+	 * @param nodeFactories the factories to register
+	 * @return
+	 */
+	public GraphQLSchemaBuilder registerNodeFactories(List<IRelayNodeFactory> nodeFactories) {
+		for (IRelayNodeFactory nodeFactory : nodeFactories) {
+			RelayNodeFactory factoryAnnotation = nodeFactory.getClass().getAnnotation(RelayNodeFactory.class);
+			relayDefaultNodeHandler.registerFactory(nodeFactory);
+			relayNodeTypes.addAll(Lists.newArrayList(factoryAnnotation.types()));
 		}
-		if (queryHandlers.isPresent()) {
-			for (Object queryHandler : queryHandlers.get()) {
-				GraphQLQueryable graphQLQueryable = queryHandler.getClass().getAnnotation(GraphQLQueryable.class);
-				try {
-					rootObjectBuilder.fields(graphQLQueryable.queryFactory().newInstance().newMethodQueriesForObject(getGraphQLObjectMapper(), queryHandler));
-				} catch (InstantiationException | IllegalAccessException ex) {
-					LOGGER.warn("Failed to load {}.  This is probably because of an unsatisfied runtime dependency.", ex);
-				}
+
+		return this;
+	}
+
+	@VisibleForTesting
+	public static List<IGraphQLTypeMapper> getDefaultTypeMappers() {
+		// install all of the default type mappers we include in our packages
+		ImmutableList.Builder<IGraphQLTypeMapper> builder = ImmutableList.builder();
+		try {
+			Set<Class> defaultTypeMappers = AnnotationUtils.getClassesWithAnnotation(GraphQLTypeMapper.class, IGraphQLTypeMapper.class.getPackage().getName())
+					.keySet();
+			for (Class typeMapper : defaultTypeMappers) {
+				builder.add((IGraphQLTypeMapper) typeMapper.newInstance());
+			}
+
+		} catch (InstantiationException | IllegalAccessException ex) {
+			Throwables.propagate(ex);
+		}
+		return builder.build();
+	}
+
+	public GraphQLSchema build() {
+
+		this.typeMappers.addAll(0, getDefaultTypeMappers());
+		this.setGraphQLObjectMapper(new GraphQLObjectMapper(typeFactory, typeMappers, typeNamingStrategy, relayNodeTypes));
+		// add our node handler first, as it's used by relay and we want people to be able to override it if they really want to
+		graphQLControllers.add(0, relayDefaultNodeHandler.build());
+
+		for (Object queryHandler : graphQLControllers) {
+			GraphQLController graphQLController = queryHandler.getClass().getAnnotation(GraphQLController.class);
+			try {
+				rootQueryBuilder.fields(graphQLController.queryFactory().newInstance().newMethodQueriesForObject(getGraphQLObjectMapper(), queryHandler));
+				rootMutationBuilder
+						.fields(graphQLController.mutationFactory().newInstance().newMethodMutationsForObject(getGraphQLObjectMapper(), queryHandler));
+			} catch (InstantiationException | IllegalAccessException ex) {
+				LOGGER.warn("Failed to load {}.  This is probably because of an unsatisfied runtime dependency.", ex);
 			}
 		}
 
-		schema = GraphQLSchema.newSchema().query(rootObjectBuilder.build()).build();
+		schema = GraphQLSchema.newSchema().query(rootQueryBuilder.build()).mutation(rootMutationBuilder.build()).build();
 
 		return schema;
 	}

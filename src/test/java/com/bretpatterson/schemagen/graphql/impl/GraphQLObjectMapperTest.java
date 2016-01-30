@@ -1,17 +1,17 @@
 package com.bretpatterson.schemagen.graphql.impl;
 
+import com.bretpatterson.schemagen.graphql.GraphQLSchemaBuilder;
+import com.bretpatterson.schemagen.graphql.IGraphQLObjectMapper;
 import com.bretpatterson.schemagen.graphql.ITypeNamingStrategy;
 import com.bretpatterson.schemagen.graphql.datafetchers.ITypeFactory;
 import com.google.common.base.Optional;
-import com.bretpatterson.schemagen.graphql.typemappers.IGraphQLTypeMapper;
+import com.google.common.collect.ImmutableList;
 import graphql.Scalars;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLOutputType;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -23,6 +23,9 @@ public class GraphQLObjectMapperTest {
 
 	@Mock
 	ITypeFactory objectMapper;
+	IGraphQLObjectMapper graphQLObjectMapper = new GraphQLObjectMapper(objectMapper,
+			GraphQLSchemaBuilder.getDefaultTypeMappers(),
+			Optional.<ITypeNamingStrategy> of(new FullTypeNamingStrategy()), ImmutableList.<Class>of());
 
 	@Before
 	public void setup() {
@@ -34,12 +37,9 @@ public class GraphQLObjectMapperTest {
 		assertEquals(expectedType.getClass(), graphQLOutputType.getClass());
 	}
 
+
 	@Test
 	public void testOutputMapperPrimitives() {
-		GraphQLObjectMapper graphQLObjectMapper = new GraphQLObjectMapper(objectMapper,
-				Optional.<List<IGraphQLTypeMapper>> absent(),
-				Optional.<List<String>> absent(),
-				Optional.<ITypeNamingStrategy> absent());
 
 		assertTypeMapping(Scalars.GraphQLString.getName(), Scalars.GraphQLString, graphQLObjectMapper.getOutputType(String.class));
 		assertTypeMapping(Scalars.GraphQLInt.getName(), Scalars.GraphQLInt, graphQLObjectMapper.getOutputType(Integer.class));
@@ -56,11 +56,7 @@ public class GraphQLObjectMapperTest {
 	}
 
 	@Test
-	public void testTypeMappingStrategy() {
-		GraphQLObjectMapper graphQLObjectMapper = new GraphQLObjectMapper(objectMapper,
-				Optional.<List<IGraphQLTypeMapper>> absent(),
-				Optional.<List<String>> absent(),
-				Optional.<ITypeNamingStrategy> of(new FullTypeNamingStrategy()));
+	public void testFullTypeMappingStrategy() {
 
 		assertTypeMapping("String", Scalars.GraphQLString, graphQLObjectMapper.getOutputType(String.class));
 		assertTypeMapping("Int", Scalars.GraphQLInt, graphQLObjectMapper.getOutputType(Integer.class));
@@ -73,6 +69,7 @@ public class GraphQLObjectMapperTest {
 		assertTypeMapping("Float", Scalars.GraphQLFloat, graphQLObjectMapper.getOutputType(double.class));
 		assertTypeMapping("Boolean", Scalars.GraphQLBoolean, graphQLObjectMapper.getOutputType(Boolean.class));
 		assertTypeMapping("com.bretpatterson.schemagen.graphql.impl.GraphQLObjectMapperTest", GraphQLObjectType.newObject().name("com.bretpatterson.schemagen.graphql.impl.GraphQLObjectMapperTest").build(), graphQLObjectMapper.getOutputType(this.getClass()));
-
 	}
+
+
 }

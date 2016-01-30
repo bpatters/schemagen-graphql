@@ -1,7 +1,7 @@
 package com.bretpatterson.schemagen.graphql.examples;
 
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLQuery;
-import com.bretpatterson.schemagen.graphql.annotations.GraphQLQueryable;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.bretpatterson.schemagen.graphql.GraphQLSchemaBuilder;
@@ -14,7 +14,7 @@ import graphql.schema.GraphQLSchema;
 /**
  * This is a hello world example of a graphQL query CLI
  */
-@GraphQLQueryable
+@GraphQLController
 public class HelloWorld {
 
 	@GraphQLQuery(name="helloWorld")
@@ -32,7 +32,7 @@ public class HelloWorld {
 				// register an object mappper so that parameter datatypes can be deserialized for method invocation
 				.registerTypeFactory(new JacksonTypeFactory(objectMapper))
 				// register the instance of Hello World as our query handler
-				.registerQueryHandlers(ImmutableList.<Object>of(helloWorld))
+				.registerGraphQLContollerObjects(ImmutableList.<Object>of(helloWorld))
 				.build();
 
 		// now lets execute a query against the schema

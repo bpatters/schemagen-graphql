@@ -1,7 +1,9 @@
 package com.bretpatterson.schemagen.graphql.annotations;
 
+import com.bretpatterson.schemagen.graphql.IMutationFactory;
 import com.bretpatterson.schemagen.graphql.IQueryFactory;
-import com.bretpatterson.schemagen.graphql.impl.QueryFactory;
+import com.bretpatterson.schemagen.graphql.impl.DefaultMutationFactory;
+import com.bretpatterson.schemagen.graphql.impl.DefaultQueryFactory;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -13,7 +15,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-public @interface GraphQLQueryable {
+public @interface GraphQLController {
 	/**
 	 *
 	 * This factory that will be used to generate queries for this object, if any.
@@ -21,5 +23,7 @@ public @interface GraphQLQueryable {
 	 * the methods into queries.
 	 * @return
 	 */
-	Class<? extends IQueryFactory> queryFactory() default QueryFactory.class;
+	Class<? extends IQueryFactory> queryFactory() default DefaultQueryFactory.class;
+
+	Class<? extends IMutationFactory> mutationFactory() default DefaultMutationFactory.class;
 }

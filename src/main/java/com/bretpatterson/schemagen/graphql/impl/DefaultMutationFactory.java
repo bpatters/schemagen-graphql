@@ -1,7 +1,8 @@
 package com.bretpatterson.schemagen.graphql.impl;
 
 import com.bretpatterson.schemagen.graphql.IGraphQLObjectMapper;
-import com.bretpatterson.schemagen.graphql.IQueryFactory;
+import com.bretpatterson.schemagen.graphql.IMutationFactory;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLMutation;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLParam;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLQuery;
 import com.bretpatterson.schemagen.graphql.datafetchers.IMethodDataFetcher;
@@ -20,12 +21,11 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 /**
- * Abstract class that can be used as a starting point to implement a TypeMapper that supports generation of fields with parameters and data
- * fetchers that call methods on the object.
+ * Default implementation of the mutation factory. Generates a mutation method using the specified data fetcher.
  */
-public class QueryFactory implements IQueryFactory {
+public class DefaultMutationFactory implements IMutationFactory {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(QueryFactory.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultMutationFactory.class);
 
 	protected <T> T findAnnotation(Annotation[] annotations, Class<T> type) {
 		for (Annotation annotation : annotations) {
@@ -43,36 +43,36 @@ public class QueryFactory implements IQueryFactory {
 	 * @param targetObject the target object the DataFetcher will invoke the method on.
 	 * @return
 	 */
-	public List<GraphQLFieldDefinition> newMethodQueriesForObject(IGraphQLObjectMapper graphQLObjectMapper, Object targetObject) {
+	public List<GraphQLFieldDefinition> newMethodMutationsForObject(IGraphQLObjectMapper graphQLObjectMapper, Object targetObject) {
 
-		ImmutableList.Builder<GraphQLFieldDefinition> queries = ImmutableList.builder();
+		ImmutableList.Builder<GraphQLFieldDefinition> mutations = ImmutableList.builder();
 
 		for (Method method : targetObject.getClass().getDeclaredMethods()) {
 			try {
-				GraphQLQuery graphQLQueryAnnotation = method.getAnnotation(GraphQLQuery.class);
-				if (graphQLQueryAnnotation != null) {
-					IMethodDataFetcher dataFetcher = graphQLQueryAnnotation.dataFetcher().newInstance();
+				GraphQLMutation graphQLMutationAnnotation = method.getAnnotation(GraphQLMutation.class);
+				if (graphQLMutationAnnotation != null) {
+					IMethodDataFetcher dataFetcher = graphQLMutationAnnotation.dataFetcher().newInstance();
 					dataFetcher.setObjectMapper(graphQLObjectMapper.getObjectMapper());
 					dataFetcher.setTargetObject(targetObject);
 					dataFetcher.setMethod(method);
-					dataFetcher.setFieldName(graphQLQueryAnnotation.name());
+					dataFetcher.setFieldName(graphQLMutationAnnotation.name());
 
 					GraphQLFieldDefinition.Builder newField = GraphQLFieldDefinition.newFieldDefinition()
-							.name(graphQLQueryAnnotation.name())
+							.name(graphQLMutationAnnotation.name())
 							.type(getReturnType(graphQLObjectMapper, method));
 					newField.dataFetcher(dataFetcher);
 					List<GraphQLArgument> arguments = getMethodArguments(graphQLObjectMapper, Optional.of(dataFetcher), method);
 
 					newField.argument(arguments);
 
-					queries.add(newField.build());
+					mutations.add(newField.build());
 				}
 			} catch (Exception ex) {
 				Throwables.propagate(ex);
 			}
 		}
 
-		return queries.build();
+		return mutations.build();
 	}
 
 	protected GraphQLOutputType getReturnType(IGraphQLObjectMapper graphQLObjectMapper, Method method) {

@@ -1,6 +1,4 @@
-ext {
-    jacksonVersion = "2.5.1";
-}
+
 
 dependencies {
     compile(project(':')) {

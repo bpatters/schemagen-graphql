@@ -4,34 +4,35 @@ import com.bretpatterson.schemagen.graphql.IGraphQLObjectMapper;
 import com.bretpatterson.schemagen.graphql.IGraphQLTypeCache;
 import com.bretpatterson.schemagen.graphql.IQueryFactory;
 import com.bretpatterson.schemagen.graphql.ITypeNamingStrategy;
-import com.bretpatterson.schemagen.graphql.annotations.GraphQLQueryable;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLController;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
 import com.bretpatterson.schemagen.graphql.datafetchers.CollectionConverterDataFetcher;
 import com.bretpatterson.schemagen.graphql.datafetchers.ITypeFactory;
 import com.bretpatterson.schemagen.graphql.exceptions.NotMappableException;
 import com.bretpatterson.schemagen.graphql.typemappers.IGraphQLTypeMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.reflect.ClassPath;
 import graphql.Scalars;
 import graphql.schema.GraphQLEnumType;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLInputObjectField;
 import graphql.schema.GraphQLInputObjectType;
 import graphql.schema.GraphQLInputType;
+import graphql.schema.GraphQLInterfaceType;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLScalarType;
 import graphql.schema.GraphQLTypeReference;
+import graphql.schema.TypeResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import relay.INode;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -43,24 +44,24 @@ import java.util.Map;
 /**
  * Created by bpatterson on 1/19/16.
  */
-public class GraphQLObjectMapper implements IGraphQLObjectMapper {
+public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(GraphQLObjectMapper.class);
 	// class type mappers
-	ImmutableMap<Type, IGraphQLTypeMapper> classTypeMappers;
-	ImmutableList<IGraphQLTypeMapper> interfaceTypeMappers;
-	IGraphQLTypeCache<GraphQLOutputType> outputTypeCache = new GraphQLTypeCache<>();
-	IGraphQLTypeCache<GraphQLInputType> inputTypeCache = new GraphQLTypeCache<>();
-	ITypeFactory objectMapper;
-	ITypeNamingStrategy typeNamingStrategy = new SimpleTypeNamingStrategy();
+	private ImmutableMap<Type, IGraphQLTypeMapper> classTypeMappers;
+	private ImmutableList<IGraphQLTypeMapper> interfaceTypeMappers;
+	private IGraphQLTypeCache<GraphQLOutputType> outputTypeCache = new GraphQLTypeCache<>();
+	private IGraphQLTypeCache<GraphQLInputType> inputTypeCache = new GraphQLTypeCache<>();
+	private ITypeFactory objectMapper;
+	private ITypeNamingStrategy typeNamingStrategy = new SimpleTypeNamingStrategy();
+	private List<Class> relayNodeTypes;
 
-
-	public GraphQLObjectMapper(ITypeFactory objectMapper,
-							   Optional<List<IGraphQLTypeMapper>> graphQLTypeMappers,
-							   Optional<List<String>> typeMappingPackageNames,
-							   Optional<ITypeNamingStrategy> typeNamingStrategy) {
+	public GraphQLObjectMapper(ITypeFactory objectMapper, List<IGraphQLTypeMapper> graphQLTypeMappers, Optional<ITypeNamingStrategy> typeNamingStrategy,
+			List<Class> relayNodeTypes) {
 
 		this.objectMapper = objectMapper;
+		this.relayNodeTypes = relayNodeTypes;
+
 		if (typeNamingStrategy.isPresent()) {
 			this.typeNamingStrategy = typeNamingStrategy.get();
 		}
@@ -68,51 +69,31 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper {
 		ImmutableList.Builder<IGraphQLTypeMapper> interfaceTypeMappersBuilder = ImmutableList.builder();
 		Map<Type, IGraphQLTypeMapper> classTypeMappersBuilder = Maps.newHashMap();
 
-		if (typeMappingPackageNames.isPresent()) {
-			try {
-
-				ClassLoader classLoader = getClass().getClassLoader();
-				ClassPath classPath = ClassPath.from(classLoader);
-				for (String packageName : typeMappingPackageNames.get()) {
-					ImmutableSet<ClassPath.ClassInfo> classes = classPath.getTopLevelClassesRecursive(packageName);
-					for (ClassPath.ClassInfo info : classes) {
-						try {
-							Class<?> type = info.load();
-							GraphQLTypeMapper graphQLTypeMapper = type.getAnnotation(GraphQLTypeMapper.class);
-							if (graphQLTypeMapper != null) {
-								try {
-									if (graphQLTypeMapper.type().isInterface()) {
-										interfaceTypeMappersBuilder.add((IGraphQLTypeMapper) type.newInstance());
-									} else {
-										classTypeMappersBuilder.put(graphQLTypeMapper.type(), (IGraphQLTypeMapper) type.newInstance());
-									}
-								} catch (Exception ex) {
-									LOGGER.error(String.format("Unexpected Exception instantiation type %s ", type.toString()), ex);
-								}
-							}
-						} catch (NoClassDefFoundError ex) {
-							LOGGER.warn("Failed to load {}.  This is probably because of an unsatisfied runtime dependency.", info);
-						}
-					}
-				}
-			} catch (IOException ex) {
-				LOGGER.error("Unexpected exception.", ex);
-			}
-		}
-		if (graphQLTypeMappers.isPresent()) {
-			for (IGraphQLTypeMapper mapper : graphQLTypeMappers.get()) {
-				GraphQLTypeMapper mapperAnnotation = mapper.getClass().getAnnotation(GraphQLTypeMapper.class);
+		for (IGraphQLTypeMapper mapper : graphQLTypeMappers) {
+			GraphQLTypeMapper mapperAnnotation = mapper.getClass().getAnnotation(GraphQLTypeMapper.class);
+			if (mapperAnnotation.type().isInterface()) {
+				interfaceTypeMappersBuilder.add(mapper);
+			} else{
 				classTypeMappersBuilder.put(mapperAnnotation.type(), mapper);
 			}
 		}
-		interfaceTypeMappers = interfaceTypeMappersBuilder.build();
-		classTypeMappers = ImmutableMap.copyOf(classTypeMappersBuilder);
+		this.interfaceTypeMappers = interfaceTypeMappersBuilder.build();
+		this.classTypeMappers = ImmutableMap.copyOf(classTypeMappersBuilder);
+
+		// store the Node type interface mapping
+		this.getOutputTypeCache().put(INode.class,
+				GraphQLInterfaceType.newInterface()
+						.name(getTypeNamingStrategy().getTypeName(INode.class))
+						.typeResolver(this)
+						.field(GraphQLFieldDefinition.newFieldDefinition().name("id").type(Scalars.GraphQLString).build())
+						.build());
 	}
 
 	private Optional<GraphQLFieldDefinition> getFieldType(Type type, Field field) {
 		if (Modifier.isStatic(field.getModifiers())) {
 			LOGGER.info("Ignoring types {} static field {}  ", type, field);
-		} if ("this$0".equals(field.getName())) {
+		}
+		if ("this$0".equals(field.getName())) {
 			// this is a dirty hack but we don't want to expose the parent pointer of inner classes...
 			return Optional.absent();
 		} else {
@@ -124,7 +105,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper {
 					builder.dataFetcher(new CollectionConverterDataFetcher(field.getName()));
 				}
 				return Optional.of(builder.build());
-			} catch(NotMappableException ex) {
+			} catch (NotMappableException ex) {
 				LOGGER.info("types field type {} not supported so ignored field named {}", type, field.getGenericType(), field.getName());
 			}
 		}
@@ -132,10 +113,10 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper {
 	}
 
 	private Optional<IGraphQLTypeMapper> getCustomTypeMapper(Type type) {
-		if (classTypeMappers.containsKey(type)) {
-			return Optional.fromNullable(classTypeMappers.get(type));
+		if (getClassTypeMappers().containsKey(type)) {
+			return Optional.fromNullable(getClassTypeMappers().get(type));
 		}
-		for (IGraphQLTypeMapper typeMapper : interfaceTypeMappers) {
+		for (IGraphQLTypeMapper typeMapper : getInterfaceTypeMappers()) {
 			if (typeMapper.handlesType(type)) {
 				return Optional.of(typeMapper);
 			}
@@ -146,32 +127,32 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper {
 
 	@Override
 	public GraphQLInputType getInputType(Type type) {
-		if (inputTypeCache.containsKey(type)) {
-			return inputTypeCache.get(type);
+		if (getInputTypeCache().containsKey(type)) {
+			return getInputTypeCache().get(type);
 		}
 		// check typemapper
 		Optional<IGraphQLTypeMapper> typeMapper = getCustomTypeMapper(type);
 		if (typeMapper.isPresent()) {
-			inputTypeCache.put(type, typeMapper.get().getInputType(this, type));
+			getInputTypeCache().put(type, typeMapper.get().getInputType(this, type));
 		} else {
 			GraphQLOutputType outputType = getOutputType(type);
-			inputTypeCache.put(type, getInputType(outputType));
+			getInputTypeCache().put(type, getInputType(outputType));
 		}
 
-		return inputTypeCache.get(type);
+		return getInputTypeCache().get(type);
 	}
 
 	@Override
 	public GraphQLOutputType getOutputType(Type type) {
 		Class classType;
 
-		if (outputTypeCache.containsKey(type)) {
-			return outputTypeCache.get(type);
+		if (getOutputTypeCache().containsKey(type)) {
+			return getOutputTypeCache().get(type);
 		}
 
 		Optional<IGraphQLTypeMapper> typeMapper = getCustomTypeMapper(type);
 		if (typeMapper.isPresent()) {
-			outputTypeCache.put(type, typeMapper.get().getOutputType(this, type));
+			getOutputTypeCache().put(type, typeMapper.get().getOutputType(this, type));
 		} else if (type instanceof ParameterizedType) {
 			ParameterizedType parameterizedType = (ParameterizedType) type;
 			Type rawType = parameterizedType.getRawType();
@@ -179,7 +160,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper {
 
 			typeMapper = getCustomTypeMapper(rawClass);
 			if (typeMapper.isPresent()) {
-				outputTypeCache.put(type, typeMapper.get().getOutputType(this, type));
+				getOutputTypeCache().put(type, typeMapper.get().getOutputType(this, type));
 			} else {
 				// generic objects not supported
 				throw new NotMappableException(String.format("Generic Object %s types requires a custom type mapper.", type.toString()));
@@ -189,19 +170,19 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper {
 			Optional<GraphQLScalarType> graphQLType = getIfPrimitiveType(classType);
 
 			if (graphQLType.isPresent()) {
-				outputTypeCache.put(type, graphQLType.get());
+				getOutputTypeCache().put(type, graphQLType.get());
 			} else if (classType.isEnum()) {
 				GraphQLEnumType.Builder enumType = GraphQLEnumType.newEnum().name(typeNamingStrategy.getTypeName(classType));
 				for (Object value : EnumSet.allOf(classType)) {
 					enumType.value(value.toString(), value);
 				}
-				outputTypeCache.put(type, enumType.build());
+				getOutputTypeCache().put(type, enumType.build());
 			} else {
 				buildObject(type, classType);
 			}
 		}
 
-		return outputTypeCache.get(type);
+		return getOutputTypeCache().get(type);
 	}
 
 	@Override
@@ -266,15 +247,15 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper {
 			GraphQLTypeReference glTypeReference = new GraphQLTypeReference(typeNamingStrategy.getTypeName(classType));
 			ImmutableList.Builder<GraphQLFieldDefinition> fields = ImmutableList.builder();
 
-			outputTypeCache.put(type, glTypeReference);
+			getOutputTypeCache().put(type, glTypeReference);
 			Class classItem = classType;
-			Optional<GraphQLQueryable> graphQLQueryable = Optional.fromNullable((GraphQLQueryable) classItem.getAnnotation(GraphQLQueryable.class));
+			Optional<GraphQLController> graphQLQueryable = Optional.fromNullable((GraphQLController) classItem.getAnnotation(GraphQLController.class));
 			Optional<IQueryFactory> queryFactory = Optional.absent();
 			Object objectInstance = null;
 
 			// if it's queryable create a factory and instance of the object that we will execute queries upon
 			if (graphQLQueryable.isPresent()) {
-				queryFactory=Optional.of(graphQLQueryable.get().queryFactory().newInstance());
+				queryFactory = Optional.of(graphQLQueryable.get().queryFactory().newInstance());
 				objectInstance = classItem.newInstance();
 			}
 
@@ -293,13 +274,17 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper {
 			} while (classItem != null && classItem != Object.class);
 			glType.fields(fields.build());
 
-			outputTypeCache.put(type, glType.build());
+			// for classes that implement Node we need to declare them of type interface
+			if (INode.class.isAssignableFrom(classType)) {
+				glType.withInterface((GraphQLInterfaceType) getOutputTypeCache().get(INode.class));
+			}
+			getOutputTypeCache().put(type, glType.build());
 		} catch (InstantiationException | IllegalAccessException ex) {
 			LOGGER.error("Unable to instantiate query factory for type class {}", classType.getName(), ex);
 			Throwables.propagate(ex);
 		}
 
-		return (GraphQLObjectType) outputTypeCache.get(type);
+		return (GraphQLObjectType) getOutputTypeCache().get(type);
 	}
 
 	@Override
@@ -309,5 +294,24 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper {
 
 	public void setTypeNamingStrategy(ITypeNamingStrategy typeNamingStrategy) {
 		this.typeNamingStrategy = typeNamingStrategy;
+	}
+
+	@VisibleForTesting
+	ImmutableMap<Type, IGraphQLTypeMapper> getClassTypeMappers() {
+		return classTypeMappers;
+	}
+
+	@VisibleForTesting
+	ImmutableList<IGraphQLTypeMapper> getInterfaceTypeMappers() {
+		return interfaceTypeMappers;
+	}
+
+	public List<Class> getRelayNodeTypes() {
+		return relayNodeTypes;
+	}
+
+	@Override
+	public GraphQLObjectType getType(Object object) {
+		return (GraphQLObjectType) getOutputType(object.getClass());
 	}
 }
