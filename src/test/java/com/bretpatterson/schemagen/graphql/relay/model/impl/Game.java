@@ -2,6 +2,7 @@ package com.bretpatterson.schemagen.graphql.relay.model.impl;
 
 import com.bretpatterson.schemagen.graphql.relay.model.IGame;
 import com.bretpatterson.schemagen.graphql.relay.model.IUser;
+import com.google.common.collect.Lists;
 
 import java.util.List;
 
@@ -12,6 +13,10 @@ public class Game implements IGame {
 	private Long id;
 	private String name;
 	private List<IUser> users;
+
+	public Game() {
+		this.users = Lists.newArrayList();
+	}
 
 	@Override
 	public Long getId() {

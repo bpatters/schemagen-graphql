@@ -8,7 +8,6 @@ import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLOutputType;
 
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.EnumSet;
 
@@ -17,8 +16,8 @@ import java.util.EnumSet;
  */
 @GraphQLTypeMapper(type = EnumSet.class)
 public class EnumSetMapper implements IGraphQLTypeMapper {
-	public boolean handlesType(Type type) {
-		Class typeClass = (Class) (type instanceof ParameterizedType ? ((ParameterizedType)type).getRawType() : type);
+	public boolean handlesType(IGraphQLObjectMapper graphQLObjectMapper, Type type) {
+		Class typeClass = graphQLObjectMapper.getClassFromType(type);
 		return EnumSet.class.isAssignableFrom(typeClass);
 	}
 

@@ -5,11 +5,10 @@ import com.bretpatterson.schemagen.graphql.relay.IUserFactory;
 import com.bretpatterson.schemagen.graphql.relay.dao.GameDAO;
 import com.bretpatterson.schemagen.graphql.relay.model.IGame;
 import com.bretpatterson.schemagen.graphql.relay.model.IUser;
+import com.bretpatterson.schemagen.graphql.relay.model.PagedList;
 import com.bretpatterson.schemagen.graphql.relay.model.impl.Game;
 import com.bretpatterson.schemagen.graphql.relay.model.impl.User;
 import com.google.common.base.Optional;
-
-import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -26,11 +25,12 @@ public class GameManager implements IGameFactory, IUserFactory {
 		return new User();
 	}
 
-	public List<IGame> findGames(String namePrefix) {
-		return gameDAO.findGames(namePrefix);
+	public PagedList<IGame> findGames(Optional<Integer> first, Optional<Integer> last, Optional<Long> before, Optional<Long> after) {
+		return gameDAO.findGames(first, last, before, after);
 	}
-	public List<IUser> findUsers(String namePrefix) {
-		return gameDAO.findUsers(namePrefix);
+
+	public PagedList<IUser> findUsers(Optional<Integer> first, Optional<Integer> last, Optional<Long> before, Optional<Long> after) {
+		return gameDAO.findUsers(first, last, before, after);
 	}
 
 	public IUser createUser(IUser user) {

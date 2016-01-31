@@ -15,7 +15,7 @@ import java.lang.reflect.Type;
  */
 @GraphQLTypeMapper(type=DateTime.class)
 public class DateTimeMapper implements IGraphQLTypeMapper {
-	public boolean handlesType(Type type) {
+	public boolean handlesType(IGraphQLObjectMapper graphQLObjectMapper, Type type) {
 		return type == DateTime.class;
 	}
 

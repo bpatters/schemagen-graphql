@@ -15,7 +15,7 @@ import java.util.Date;
  */
 @GraphQLTypeMapper(type= Date.class)
 public class DateMapper implements IGraphQLTypeMapper {
-	public boolean handlesType(Type type) {
+	public boolean handlesType(IGraphQLObjectMapper graphQLObjectMapper, Type type) {
 		return type == Date.class;
 	}
 

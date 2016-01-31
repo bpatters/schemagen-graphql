@@ -1,9 +1,9 @@
 package com.bretpatterson.schemagen.graphql.relay.controller;
 
-import relay.INode;
-import relay.RelayConnection;
-
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeName;
+import relay.INode;
+
+import java.util.List;
 
 /**
  * Created by bpatterson on 1/30/16.
@@ -12,7 +12,7 @@ import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeName;
 public class GameDTO implements INode {
 	private String id;
 	private String name;
-	private RelayConnection<UserDTO> users;
+	private List<UserDTO> users;
 
 	@Override
 	public String getId() {
@@ -34,11 +34,11 @@ public class GameDTO implements INode {
 		return this;
 	}
 
-	public RelayConnection<UserDTO> getUsers() {
+	public List<UserDTO> getUsers() {
 		return users;
 	}
 
-	public GameDTO setUsers(RelayConnection<UserDTO> users) {
+	public GameDTO setUsers(List<UserDTO> users) {
 		this.users = users;
 
 		return this;

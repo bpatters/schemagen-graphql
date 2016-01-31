@@ -15,15 +15,19 @@ public class RelayConnection<T> {
 		return edges;
 	}
 
-	public void setEdges(List<Edge<T>> edges) {
+	public RelayConnection setEdges(List<Edge<T>> edges) {
 		this.edges = edges;
+
+		return this;
 	}
 
 	public PageInfo getPageInfo() {
 		return pageInfo;
 	}
 
-	public void setPageInfo(PageInfo pageInfo) {
+	public RelayConnection setPageInfo(PageInfo pageInfo) {
 		this.pageInfo = pageInfo;
+
+		return this;
 	}
 }

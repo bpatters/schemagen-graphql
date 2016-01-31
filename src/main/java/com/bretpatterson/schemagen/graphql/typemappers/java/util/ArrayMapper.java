@@ -8,7 +8,6 @@ import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLOutputType;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
@@ -16,8 +15,8 @@ import java.lang.reflect.Type;
  */
 @GraphQLTypeMapper(type = Array.class)
 public class ArrayMapper implements IGraphQLTypeMapper {
-	public boolean handlesType(Type type) {
-		Class typeClass = (Class) (type instanceof ParameterizedType ? ((ParameterizedType)type).getRawType() : type);
+	public boolean handlesType(IGraphQLObjectMapper graphQLObjectMapper, Type type) {
+		Class typeClass = graphQLObjectMapper.getClassFromType(type);
 		return Array.class.isAssignableFrom(typeClass);
 	}
 

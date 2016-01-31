@@ -49,7 +49,7 @@ public class RelayTest {
 		NewGameInput input = objectMapper.readValue(String.format("{ \"game\":{\"name\":\"%s\"}, \"clientMutationId\":\"%s\"}", name, clientMutationId),
 				NewGameInput.class);
 		ExecutionResult result = new GraphQL(schema).execute(
-				String.format("mutation M { createGame(gameInput:{ game: {name:\"%s\"}, clientMutationId:\"%s\"}) { game {id, name}, clientMutationId } }",
+				String.format("mutation M { createGame(input:{ game: {name:\"%s\"}, clientMutationId:\"%s\"}) { game {id, name}, clientMutationId } }",
 						name,
 						clientMutationId));
 		assertEquals(0, result.getErrors().size());
@@ -63,7 +63,7 @@ public class RelayTest {
 	}
 
 	private DeleteGamePayload deleteGame(String id, String clientMutationId) throws IOException {
-		ExecutionResult result = new GraphQL(schema).execute(String.format("mutation M { deleteGame(gameInput:{ id:\"%s\", clientMutationId:\"%s\"}) {clientMutationId} }", id, clientMutationId));
+		ExecutionResult result = new GraphQL(schema).execute(String.format("mutation M { deleteGame(input:{ id:\"%s\", clientMutationId:\"%s\"}) {clientMutationId} }", id, clientMutationId));
 		assertEquals(0, result.getErrors().size());
 
 		DeleteGamePayload payload = objectMapper.readValue(objectMapper.writeValueAsString(((Map) result.getData()).get("deleteGame")),
@@ -76,7 +76,7 @@ public class RelayTest {
 
 	private NewUserPayload createUser(String name, String email, String clientMutationId) throws IOException {
 		ExecutionResult result = new GraphQL(schema).execute(String.format(
-				"mutation M { createUser(userInput: { user: { name:\"%s\", email:\"%s\"}, clientMutationId:\"%s\"}) { user {id, name, email}, clientMutationId} }",
+				"mutation M { createUser(input: { user: { name:\"%s\", email:\"%s\"}, clientMutationId:\"%s\"}) { user {id, name, email}, clientMutationId} }",
 				name,
 				email,
 				clientMutationId));
@@ -92,7 +92,7 @@ public class RelayTest {
 	}
 
 	private DeleteUserPayload deleteUser(String id, String clientMutationId) throws IOException {
-		ExecutionResult result = new GraphQL(schema).execute(String.format("mutation M { deleteUser(userInput: { id:\"%s\", clientMutationId:\"%s\"}) {clientMutationId} }",id, clientMutationId));
+		ExecutionResult result = new GraphQL(schema).execute(String.format("mutation M { deleteUser(input: { id:\"%s\", clientMutationId:\"%s\"}) {clientMutationId} }",id, clientMutationId));
 		assertEquals(0, result.getErrors().size());
 
 		DeleteUserPayload payload = objectMapper.readValue(objectMapper.writeValueAsString(((Map) result.getData()).get("deleteUser")),

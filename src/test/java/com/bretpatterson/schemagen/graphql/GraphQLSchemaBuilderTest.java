@@ -35,7 +35,7 @@ public class GraphQLSchemaBuilderTest {
 	private class TestTypeMapper implements IGraphQLTypeMapper {
 
 		@Override
-		public boolean handlesType(Type type) {
+		public boolean handlesType(IGraphQLObjectMapper graphQLObjectMapper, Type type) {
 			return type == GraphQLSchemaBuilderTest.class;
 		}
 

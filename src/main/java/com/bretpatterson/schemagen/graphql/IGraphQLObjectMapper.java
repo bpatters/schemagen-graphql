@@ -48,4 +48,11 @@ public interface IGraphQLObjectMapper {
 	 * @return
 	 */
 	ITypeFactory getObjectMapper();
+
+	/**
+	 * Get the raw type of this object for generic types
+	 * @param type
+	 * @return
+	 */
+	public Class getClassFromType(Type type);
 }

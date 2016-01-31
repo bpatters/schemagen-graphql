@@ -16,7 +16,7 @@ import java.lang.reflect.Type;
 @GraphQLTypeMapper(type= Optional.class)
 public class OptionalMapper implements IGraphQLTypeMapper {
 	@Override
-	public boolean handlesType(Type type) {
+	public boolean handlesType(IGraphQLObjectMapper graphQLObjectMapper, Type type) {
 		if (type instanceof  ParameterizedType) {
 			ParameterizedType parameterizedType = (ParameterizedType) type;
 

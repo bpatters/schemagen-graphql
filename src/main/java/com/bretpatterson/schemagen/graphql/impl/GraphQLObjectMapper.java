@@ -37,9 +37,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 /**
  * Created by bpatterson on 1/19/16.
@@ -55,6 +57,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 	private ITypeFactory objectMapper;
 	private ITypeNamingStrategy typeNamingStrategy = new SimpleTypeNamingStrategy();
 	private List<Class> relayNodeTypes;
+	private Stack<Map<String, Type>> typeArguments = new Stack<>();
 
 	public GraphQLObjectMapper(ITypeFactory objectMapper, List<IGraphQLTypeMapper> graphQLTypeMappers, Optional<ITypeNamingStrategy> typeNamingStrategy,
 			List<Class> relayNodeTypes) {
@@ -73,7 +76,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 			GraphQLTypeMapper mapperAnnotation = mapper.getClass().getAnnotation(GraphQLTypeMapper.class);
 			if (mapperAnnotation.type().isInterface()) {
 				interfaceTypeMappersBuilder.add(mapper);
-			} else{
+			} else {
 				classTypeMappersBuilder.put(mapperAnnotation.type(), mapper);
 			}
 		}
@@ -89,6 +92,30 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 						.build());
 	}
 
+	private void buildGenericArgumentTypeMap(ParameterizedType type) {
+		Class rawClass = (Class) type.getRawType();
+		TypeVariable[] typeVariables = rawClass.getTypeParameters();
+		Type[] arguments = type.getActualTypeArguments();
+		for (int i = 0; i < typeVariables.length; i++) {
+			// field definitions can cause us to come in here so we ignore type variable argument types.
+			if (!(arguments[i] instanceof TypeVariable)) {
+				typeArguments.peek().put(typeVariables[i].getName(), arguments[i]);
+			} else {
+				// we might be mapping one variable name to another so do that here
+				// IE: MyObject<R,S> {
+				//       MyInnerObject<S,R>
+				//    }
+				//   MyInnerOBject<R,S> {
+				//       R rType;
+				//   }
+				// we need to update the current with the type from the parents map, so we pop, update, push
+				Map<String, Type> current = typeArguments.pop();
+				current.put(typeVariables[i].getName(), typeArguments.peek().get(((TypeVariable)arguments[i]).getName()));
+				typeArguments.push(current);
+			}
+		}
+	}
+
 	private Optional<GraphQLFieldDefinition> getFieldType(Type type, Field field) {
 		if (Modifier.isStatic(field.getModifiers())) {
 			LOGGER.info("Ignoring types {} static field {}  ", type, field);
@@ -99,6 +126,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 		} else {
 			LOGGER.info("Processing types {} field {}  ", type, field);
 			try {
+
 				GraphQLOutputType fieldType = getOutputType(field.getGenericType());
 				GraphQLFieldDefinition.Builder builder = GraphQLFieldDefinition.newFieldDefinition().name(field.getName()).type(fieldType);
 				if (fieldType instanceof GraphQLList) {
@@ -116,10 +144,16 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 		if (getClassTypeMappers().containsKey(type)) {
 			return Optional.fromNullable(getClassTypeMappers().get(type));
 		}
+		// type variables can't have custom type mappers
+		if (type instanceof TypeVariable) {
+			return Optional.absent();
+		}
 		for (IGraphQLTypeMapper typeMapper : getInterfaceTypeMappers()) {
-			if (typeMapper.handlesType(type)) {
+
+			if (typeMapper.handlesType(this, type)) {
 				return Optional.of(typeMapper);
 			}
+
 		}
 
 		return Optional.absent();
@@ -162,11 +196,15 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 			if (typeMapper.isPresent()) {
 				getOutputTypeCache().put(type, typeMapper.get().getOutputType(this, type));
 			} else {
+				return buildObject(type, rawClass);
 				// generic objects not supported
-				throw new NotMappableException(String.format("Generic Object %s types requires a custom type mapper.", type.toString()));
+				// throw new NotMappableException(String.format("Generic Object %s types requires a custom type mapper.", type.toString()));
 			}
+		} else if (type instanceof TypeVariable) {
+			TypeVariable vType = (TypeVariable) type;
+			return getOutputType(typeArguments.peek().get(vType.getName()));
 		} else {
-			classType = (Class) type;
+			classType = getClassFromType(type);
 			Optional<GraphQLScalarType> graphQLType = getIfPrimitiveType(classType);
 
 			if (graphQLType.isPresent()) {
@@ -258,20 +296,36 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 				queryFactory = Optional.of(graphQLQueryable.get().queryFactory().newInstance());
 				objectInstance = classItem.newInstance();
 			}
-
+			// if we are a generic object then we need to build a generic variable to type mapping
+			if (type instanceof ParameterizedType) {
+				// if it's empty then we are at root generic class so create new type argument map for usage
+				if (typeArguments.empty()) {
+					typeArguments.push(Maps.<String, Type> newHashMap());
+				} else {
+					// we are inside the context of another generic object, so create a copy of parent map to use within new context
+					typeArguments.push(Maps.newHashMap(typeArguments.peek()));
+				}
+				buildGenericArgumentTypeMap((ParameterizedType) type);
+			}
 			do {
+
 				for (Field field : classItem.getDeclaredFields()) {
 					Optional<GraphQLFieldDefinition> fieldDefinitionOptional = getFieldType(type, field);
 					if (fieldDefinitionOptional.isPresent()) {
 						fields.add(fieldDefinitionOptional.get());
 					}
 				}
+				// pop currentContext
 				classItem = classItem.getSuperclass();
 
 				if (queryFactory.isPresent()) {
 					fields.addAll(queryFactory.get().newMethodQueriesForObject(this, objectInstance));
 				}
 			} while (classItem != null && classItem != Object.class);
+			// exiting context of current type arguments if we processed a generic type
+			if (type instanceof ParameterizedType) {
+				typeArguments.pop();
+			}
 			glType.fields(fields.build());
 
 			// for classes that implement Node we need to declare them of type interface
@@ -313,5 +367,16 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 	@Override
 	public GraphQLObjectType getType(Object object) {
 		return (GraphQLObjectType) getOutputType(object.getClass());
+	}
+
+	public Class getClassFromType(Type type) {
+
+		if (type instanceof ParameterizedType) {
+			return (Class) ((ParameterizedType) type).getRawType();
+		} else if (type instanceof TypeVariable) {
+			return (Class) typeArguments.peek().get(((TypeVariable) type).getName());
+		} else {
+			return (Class) type;
+		}
 	}
 }

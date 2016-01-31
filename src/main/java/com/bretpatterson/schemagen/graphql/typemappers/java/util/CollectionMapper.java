@@ -16,8 +16,8 @@ import java.util.Collection;
  */
 @GraphQLTypeMapper(type = Collection.class)
 public class CollectionMapper implements IGraphQLTypeMapper {
-	public boolean handlesType(Type type) {
-		Class typeClass = (Class) (type instanceof ParameterizedType ? ((ParameterizedType)type).getRawType() : type);
+	public boolean handlesType(IGraphQLObjectMapper graphQLObjectMapper, Type type) {
+		Class typeClass = graphQLObjectMapper.getClassFromType(type);
 		return Collection.class.isAssignableFrom(typeClass);
 	}
 
