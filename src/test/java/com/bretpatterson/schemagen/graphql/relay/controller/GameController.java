@@ -4,6 +4,9 @@ import com.bretpatterson.schemagen.graphql.annotations.GraphQLController;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLMutation;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLParam;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLQuery;
+import com.bretpatterson.schemagen.graphql.relay.ConnectionCursor;
+import com.bretpatterson.schemagen.graphql.relay.Edge;
+import com.bretpatterson.schemagen.graphql.relay.RelayConnection;
 import com.bretpatterson.schemagen.graphql.relay.manager.GameManager;
 import com.bretpatterson.schemagen.graphql.relay.model.IGame;
 import com.bretpatterson.schemagen.graphql.relay.model.IUser;
@@ -24,10 +27,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import graphql.relay.ConnectionCursor;
 import graphql.relay.PageInfo;
-import com.bretpatterson.schemagen.graphql.relay.Edge;
-import com.bretpatterson.schemagen.graphql.relay.RelayConnection;
 
 import java.util.List;
 
@@ -48,7 +48,7 @@ public class GameController {
 
 	@GraphQLQuery(name = "games")
 	public RelayConnection<GameDTO> findGames(@GraphQLParam(name = "first") Integer first,
-			@GraphQLParam(name = "first") Integer last,
+			@GraphQLParam(name = "last") Integer last,
 			@GraphQLParam(name = "before") ConnectionCursor beforeCursor,
 			@GraphQLParam(name = "after") ConnectionCursor afterCursor) {
 		Optional<Long> before = Optional.absent();

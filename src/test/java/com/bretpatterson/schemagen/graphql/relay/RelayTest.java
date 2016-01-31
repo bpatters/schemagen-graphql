@@ -12,7 +12,9 @@ import com.bretpatterson.schemagen.graphql.relay.model.payloads.NewGamePayload;
 import com.bretpatterson.schemagen.graphql.relay.model.payloads.NewUserPayload;
 import com.bretpatterson.schemagen.graphql.relay.model.relay.factories.RelayGameFactory;
 import com.bretpatterson.schemagen.graphql.relay.model.relay.factories.RelayUserFactory;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
@@ -23,6 +25,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Map;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -48,8 +51,8 @@ public class RelayTest {
 	private NewGamePayload createGame(String name, String clientMutationId) throws IOException {
 		NewGameInput input = objectMapper.readValue(String.format("{ \"game\":{\"name\":\"%s\"}, \"clientMutationId\":\"%s\"}", name, clientMutationId),
 				NewGameInput.class);
-		ExecutionResult result = new GraphQL(schema).execute(
-				String.format("mutation M { createGame(input:{ game: {name:\"%s\"}, clientMutationId:\"%s\"}) { game {id, name}, clientMutationId } }",
+		ExecutionResult result = new GraphQL(schema)
+				.execute(String.format("mutation M { createGame(input:{ game: {name:\"%s\"}, clientMutationId:\"%s\"}) { game {id, name}, clientMutationId } }",
 						name,
 						clientMutationId));
 		assertEquals(0, result.getErrors().size());
@@ -63,7 +66,8 @@ public class RelayTest {
 	}
 
 	private DeleteGamePayload deleteGame(String id, String clientMutationId) throws IOException {
-		ExecutionResult result = new GraphQL(schema).execute(String.format("mutation M { deleteGame(input:{ id:\"%s\", clientMutationId:\"%s\"}) {clientMutationId} }", id, clientMutationId));
+		ExecutionResult result = new GraphQL(schema)
+				.execute(String.format("mutation M { deleteGame(input:{ id:\"%s\", clientMutationId:\"%s\"}) {clientMutationId} }", id, clientMutationId));
 		assertEquals(0, result.getErrors().size());
 
 		DeleteGamePayload payload = objectMapper.readValue(objectMapper.writeValueAsString(((Map) result.getData()).get("deleteGame")),
@@ -92,7 +96,8 @@ public class RelayTest {
 	}
 
 	private DeleteUserPayload deleteUser(String id, String clientMutationId) throws IOException {
-		ExecutionResult result = new GraphQL(schema).execute(String.format("mutation M { deleteUser(input: { id:\"%s\", clientMutationId:\"%s\"}) {clientMutationId} }",id, clientMutationId));
+		ExecutionResult result = new GraphQL(schema)
+				.execute(String.format("mutation M { deleteUser(input: { id:\"%s\", clientMutationId:\"%s\"}) {clientMutationId} }", id, clientMutationId));
 		assertEquals(0, result.getErrors().size());
 
 		DeleteUserPayload payload = objectMapper.readValue(objectMapper.writeValueAsString(((Map) result.getData()).get("deleteUser")),
@@ -117,6 +122,21 @@ public class RelayTest {
 		assertEquals(0, result.getErrors().size());
 
 		return objectMapper.readValue(objectMapper.writeValueAsString(((Map) result.getData()).get("node")), UserDTO.class);
+	}
+
+	private RelayConnection<GameDTO> findGames(int first) throws IOException {
+
+		ExecutionResult result = new GraphQL(schema).execute(String.format("{ games(first:%d) { edges { node {id, name}, cursor {value} } , pageInfo {hasPreviousPage, hasNextPage} } }", first));
+		assertEquals(0, result.getErrors().size());
+
+		return deserialize(objectMapper.writeValueAsString(((Map) result.getData()).get("games")), new TypeReference<RelayConnection<GameDTO>>(){});
+	}
+	private <T> T deserialize(String value,TypeReference type) {
+		try {
+			return objectMapper.readValue(value, type);
+		} catch (IOException ex) {
+			throw Throwables.propagate(ex);
+		}
 	}
 
 	@Test
@@ -167,5 +187,22 @@ public class RelayTest {
 		deleteUser(newUser.getId(), "deleteUser");
 		user = getUserNode(newUser.getId());
 		assertNull(user);
+	}
+
+	@Test
+	public void testFindGames() throws IOException {
+		GameDTO newGame;
+
+		for (int i=0; i < 1000;i++) {
+			newGame = createGame(String.format("Game %d", i), String.format("Mutation ID:%d", i)).getGame();
+		}
+		RelayConnection<GameDTO> games = findGames(100);
+
+		assertEquals(100, games.getEdges().size());
+		assertTrue(games.getPageInfo().isHasNextPage());
+		assertTrue(!games.getPageInfo().isHasPreviousPage());
+		for (int i=0;i< 100;i++) {
+			assertEquals(String.format("Game %d",i),games.getEdges().get(i).getNode().getName());
+		}
 	}
 }

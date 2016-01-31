@@ -23,11 +23,10 @@ public class GameDAO {
 	private long lastUserId = 0;
 
 	public PagedList<IGame> findGames(Optional<Integer> first, Optional<Integer> last, Optional<Long> before, Optional<Long> after) {
-		checkArgument(before.isPresent() && before.get() >= 0);
-		checkArgument(before.isPresent() && before.get() < games.size());
-		checkArgument(after.isPresent() && after.get() >= 0);
-		checkArgument(after.isPresent() && after.get() < games.size());
-		checkArgument(before.isPresent() || after.isPresent());
+		checkArgument(!before.isPresent() || (before.isPresent() && before.get() >= 0));
+		checkArgument(!before.isPresent() || before.isPresent() && before.get() < games.size());
+		checkArgument(!after.isPresent() || after.isPresent() && after.get() >= 0);
+		checkArgument(!after.isPresent() || after.isPresent() && after.get() < games.size());
 
 		List<IGame> items;
 		int start = 0, end = games.size();
