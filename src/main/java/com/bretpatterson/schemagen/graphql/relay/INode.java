@@ -1,4 +1,4 @@
-package relay;
+package com.bretpatterson.schemagen.graphql.relay;
 
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeName;
 

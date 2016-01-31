@@ -26,8 +26,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import graphql.relay.ConnectionCursor;
 import graphql.relay.PageInfo;
-import relay.Edge;
-import relay.RelayConnection;
+import com.bretpatterson.schemagen.graphql.relay.Edge;
+import com.bretpatterson.schemagen.graphql.relay.RelayConnection;
 
 import java.util.List;
 

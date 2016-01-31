@@ -1,4 +1,4 @@
-package relay;
+package com.bretpatterson.schemagen.graphql.relay;
 
 /**
  * Interface for node factories that know how to construct objects from the appropriate node id.

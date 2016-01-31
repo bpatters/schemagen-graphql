@@ -16,9 +16,9 @@ import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import relay.IRelayNodeFactory;
-import relay.annotations.RelayNodeFactory;
-import relay.impl.RelayDefaultNodeHandler;
+import com.bretpatterson.schemagen.graphql.relay.IRelayNodeFactory;
+import com.bretpatterson.schemagen.graphql.relay.annotations.RelayNodeFactory;
+import com.bretpatterson.schemagen.graphql.relay.impl.RelayDefaultNodeHandler;
 
 import java.io.IOException;
 import java.util.LinkedList;

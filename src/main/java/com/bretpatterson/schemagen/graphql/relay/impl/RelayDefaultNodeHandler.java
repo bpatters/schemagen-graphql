@@ -1,13 +1,13 @@
-package relay.impl;
+package com.bretpatterson.schemagen.graphql.relay.impl;
 
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLController;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLParam;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLQuery;
+import com.bretpatterson.schemagen.graphql.relay.INode;
 import com.google.common.collect.ImmutableList;
-import relay.INode;
-import relay.IRelayNodeFactory;
-import relay.IRelayNodeHandler;
-import relay.exceptions.UnknownObjectType;
+import com.bretpatterson.schemagen.graphql.relay.IRelayNodeFactory;
+import com.bretpatterson.schemagen.graphql.relay.IRelayNodeHandler;
+import com.bretpatterson.schemagen.graphql.relay.exceptions.UnknownObjectType;
 
 import java.util.List;
 

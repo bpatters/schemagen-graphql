@@ -1,4 +1,4 @@
-package relay;
+package com.bretpatterson.schemagen.graphql.relay;
 
 import graphql.relay.ConnectionCursor;
 

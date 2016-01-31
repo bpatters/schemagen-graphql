@@ -1,4 +1,4 @@
-package relay;
+package com.bretpatterson.schemagen.graphql.relay;
 
 /**
  * A GrapphQLController annotated object that handles Relay node(id: string) requests

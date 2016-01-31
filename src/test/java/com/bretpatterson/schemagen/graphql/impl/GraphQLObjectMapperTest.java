@@ -15,7 +15,7 @@ import graphql.schema.GraphQLOutputType;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import relay.RelayConnection;
+import com.bretpatterson.schemagen.graphql.relay.RelayConnection;
 
 import java.util.List;
 

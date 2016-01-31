@@ -31,7 +31,7 @@ import graphql.schema.GraphQLTypeReference;
 import graphql.schema.TypeResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import relay.INode;
+import com.bretpatterson.schemagen.graphql.relay.INode;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;

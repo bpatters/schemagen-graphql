@@ -1,6 +1,6 @@
 package com.bretpatterson.schemagen.graphql.relay.controller;
 
-import relay.INode;
+import com.bretpatterson.schemagen.graphql.relay.INode;
 
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeName;
 

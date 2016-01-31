@@ -3,8 +3,8 @@ package com.bretpatterson.schemagen.graphql.relay.model.relay.factories;
 import com.bretpatterson.schemagen.graphql.relay.controller.GameController;
 import com.bretpatterson.schemagen.graphql.relay.controller.GameDTO;
 import com.bretpatterson.schemagen.graphql.relay.model.impl.Game;
-import relay.IRelayNodeFactory;
-import relay.annotations.RelayNodeFactory;
+import com.bretpatterson.schemagen.graphql.relay.IRelayNodeFactory;
+import com.bretpatterson.schemagen.graphql.relay.annotations.RelayNodeFactory;
 
 /**
  * Created by bpatterson on 1/27/16.

@@ -1,4 +1,4 @@
-package relay.annotations;
+package com.bretpatterson.schemagen.graphql.relay.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
