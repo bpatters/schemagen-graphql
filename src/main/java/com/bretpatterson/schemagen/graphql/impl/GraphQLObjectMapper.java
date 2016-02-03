@@ -246,7 +246,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 			return (GraphQLInputType) outputType;
 		} else if (outputType instanceof GraphQLObjectType) {
 			GraphQLObjectType objectType = (GraphQLObjectType) outputType;
-			GraphQLInputObjectType.Builder rv = GraphQLInputObjectType.newInputObject().name(objectType.getName());
+			GraphQLInputObjectType.Builder rv = GraphQLInputObjectType.newInputObject().name(objectType.getName()+"_Input");
 
 			for (GraphQLFieldDefinition field : objectType.getFieldDefinitions()) {
 				rv.field(GraphQLInputObjectField.newInputObjectField().name(field.getName()).type(getInputType(field.getType())).build());
@@ -312,7 +312,9 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 				for (Field field : classItem.getDeclaredFields()) {
 					Optional<GraphQLFieldDefinition> fieldDefinitionOptional = getFieldType(type, field);
 					if (fieldDefinitionOptional.isPresent()) {
-						fields.add(fieldDefinitionOptional.get());
+						if (!field.getName().startsWith("$")) {
+							fields.add(fieldDefinitionOptional.get());
+						}
 					}
 				}
 				// pop currentContext

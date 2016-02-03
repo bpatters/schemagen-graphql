@@ -4,6 +4,9 @@ import com.bretpatterson.schemagen.graphql.annotations.GraphQLController;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
 import com.bretpatterson.schemagen.graphql.datafetchers.ITypeFactory;
 import com.bretpatterson.schemagen.graphql.impl.GraphQLObjectMapper;
+import com.bretpatterson.schemagen.graphql.relay.IRelayNodeFactory;
+import com.bretpatterson.schemagen.graphql.relay.annotations.RelayNodeFactory;
+import com.bretpatterson.schemagen.graphql.relay.impl.RelayDefaultNodeHandler;
 import com.bretpatterson.schemagen.graphql.typemappers.IGraphQLTypeMapper;
 import com.bretpatterson.schemagen.graphql.utils.AnnotationUtils;
 import com.google.common.annotations.VisibleForTesting;
@@ -12,13 +15,11 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.ClassPath;
+import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.bretpatterson.schemagen.graphql.relay.IRelayNodeFactory;
-import com.bretpatterson.schemagen.graphql.relay.annotations.RelayNodeFactory;
-import com.bretpatterson.schemagen.graphql.relay.impl.RelayDefaultNodeHandler;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -151,19 +152,29 @@ public class GraphQLSchemaBuilder {
 		this.setGraphQLObjectMapper(new GraphQLObjectMapper(typeFactory, typeMappers, typeNamingStrategy, relayNodeTypes));
 		// add our node handler first, as it's used by relay and we want people to be able to override it if they really want to
 		graphQLControllers.add(0, relayDefaultNodeHandler.build());
+		List<GraphQLFieldDefinition> mutations = null;
+		List<GraphQLFieldDefinition> queries = null;
 
 		for (Object queryHandler : graphQLControllers) {
 			GraphQLController graphQLController = queryHandler.getClass().getAnnotation(GraphQLController.class);
 			try {
-				rootQueryBuilder.fields(graphQLController.queryFactory().newInstance().newMethodQueriesForObject(getGraphQLObjectMapper(), queryHandler));
-				rootMutationBuilder
-						.fields(graphQLController.mutationFactory().newInstance().newMethodMutationsForObject(getGraphQLObjectMapper(), queryHandler));
+				queries = graphQLController.queryFactory().newInstance().newMethodQueriesForObject(getGraphQLObjectMapper(), queryHandler);
+				mutations = graphQLController.mutationFactory().newInstance().newMethodMutationsForObject(getGraphQLObjectMapper(), queryHandler);
 			} catch (InstantiationException | IllegalAccessException ex) {
 				LOGGER.warn("Failed to load {}.  This is probably because of an unsatisfied runtime dependency.", ex);
 			}
 		}
+		GraphQLSchema.Builder builder = GraphQLSchema.newSchema();
 
-		schema = GraphQLSchema.newSchema().query(rootQueryBuilder.build()).mutation(rootMutationBuilder.build()).build();
+		if (queries != null && queries.size() > 0) {
+			rootQueryBuilder.fields(queries);
+			builder.query(rootQueryBuilder.build());
+		}
+		if (mutations != null && mutations.size() > 0) {
+			rootMutationBuilder.fields(mutations);
+			builder.mutation(rootMutationBuilder.build());
+		}
+		schema = builder.build();
 
 		return schema;
 	}
