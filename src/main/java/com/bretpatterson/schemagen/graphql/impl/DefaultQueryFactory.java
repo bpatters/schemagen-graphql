@@ -59,7 +59,7 @@ public class DefaultQueryFactory implements IQueryFactory {
 
 					GraphQLFieldDefinition.Builder newField = GraphQLFieldDefinition.newFieldDefinition()
 							.name(graphQLQueryAnnotation.name());
-							newField.type(getReturnType(graphQLObjectMapper, method));
+					newField.type(getReturnType(graphQLObjectMapper, method));
 					newField.dataFetcher(dataFetcher);
 					List<GraphQLArgument> arguments = getMethodArguments(graphQLObjectMapper, Optional.of(dataFetcher), method);
 
