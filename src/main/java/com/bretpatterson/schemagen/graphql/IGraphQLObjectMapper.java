@@ -3,8 +3,10 @@ package com.bretpatterson.schemagen.graphql;
 import com.bretpatterson.schemagen.graphql.datafetchers.ITypeFactory;
 import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLOutputType;
+import graphql.schema.GraphQLType;
 
 import java.lang.reflect.Type;
+import java.util.Set;
 
 /**
  * A GraphQLObjectMapper that knows how to build a GraphQLDefinition for objects.
@@ -55,4 +57,10 @@ public interface IGraphQLObjectMapper {
 	 * @return
 	 */
 	public Class getClassFromType(Type type);
+
+	/**
+	 * Returns all input types created.
+	 * @return
+	 */
+	public Set<GraphQLType> getInputTypes();
 }

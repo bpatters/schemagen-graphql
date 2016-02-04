@@ -174,7 +174,7 @@ public class GraphQLSchemaBuilder {
 			rootMutationBuilder.fields(mutations);
 			builder.mutation(rootMutationBuilder.build());
 		}
-		schema = builder.build();
+		schema = builder.build(graphQLObjectMapper.getInputTypes());
 
 		return schema;
 	}

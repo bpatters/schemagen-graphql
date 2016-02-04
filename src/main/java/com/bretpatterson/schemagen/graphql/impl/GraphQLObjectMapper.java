@@ -1,5 +1,19 @@
 package com.bretpatterson.schemagen.graphql.impl;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.bretpatterson.schemagen.graphql.IGraphQLObjectMapper;
 import com.bretpatterson.schemagen.graphql.IGraphQLTypeCache;
 import com.bretpatterson.schemagen.graphql.IQueryFactory;
@@ -9,6 +23,7 @@ import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
 import com.bretpatterson.schemagen.graphql.datafetchers.CollectionConverterDataFetcher;
 import com.bretpatterson.schemagen.graphql.datafetchers.ITypeFactory;
 import com.bretpatterson.schemagen.graphql.exceptions.NotMappableException;
+import com.bretpatterson.schemagen.graphql.relay.INode;
 import com.bretpatterson.schemagen.graphql.typemappers.IGraphQLTypeMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -16,6 +31,8 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
 import graphql.Scalars;
 import graphql.schema.GraphQLEnumType;
 import graphql.schema.GraphQLFieldDefinition;
@@ -27,21 +44,9 @@ import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLScalarType;
+import graphql.schema.GraphQLType;
 import graphql.schema.GraphQLTypeReference;
 import graphql.schema.TypeResolver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.bretpatterson.schemagen.graphql.relay.INode;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
 
 /**
  * Created by bpatterson on 1/19/16.
@@ -58,6 +63,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 	private ITypeNamingStrategy typeNamingStrategy = new SimpleTypeNamingStrategy();
 	private List<Class> relayNodeTypes;
 	private Stack<Map<String, Type>> typeArguments = new Stack<>();
+	private Set<GraphQLType> inputTypes = Sets.newHashSet();
 
 	public GraphQLObjectMapper(ITypeFactory objectMapper, List<IGraphQLTypeMapper> graphQLTypeMappers, Optional<ITypeNamingStrategy> typeNamingStrategy,
 			List<Class> relayNodeTypes) {
@@ -252,7 +258,10 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 				rv.field(GraphQLInputObjectField.newInputObjectField().name(field.getName()).type(getInputType(field.getType())).build());
 			}
 
-			return rv.build();
+			GraphQLInputType type = rv.build();
+			inputTypes.add(type);
+			return type;
+
 		} else {
 			throw new RuntimeException(String.format("Unknown output type %s", outputType.toString()));
 		}
@@ -380,5 +389,9 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 		} else {
 			return (Class) type;
 		}
+	}
+
+	public Set<GraphQLType> getInputTypes() {
+		return inputTypes;
 	}
 }
