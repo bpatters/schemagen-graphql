@@ -5,6 +5,7 @@ import com.bretpatterson.schemagen.graphql.IQueryFactory;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLParam;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLQuery;
 import com.bretpatterson.schemagen.graphql.datafetchers.IMethodDataFetcher;
+import com.bretpatterson.schemagen.graphql.utils.AnnotationUtils;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -110,7 +111,7 @@ public class DefaultQueryFactory implements IQueryFactory {
 			if (dataFetcher.isPresent()) {
 				dataFetcher.get().addParam(graphQLParam.name(),
 						paramType,
-						Optional.<Object> fromNullable(GraphQLParam.DEFAULT_NONE.equals(graphQLParam.defaultValue()) ? null : graphQLParam.defaultValue()));
+						Optional.<Object> fromNullable(AnnotationUtils.isNullValue(graphQLParam.defaultValue()) ? null : graphQLParam.defaultValue()));
 			}
 
 			argumentBuilder.add(paramBuilder.build());

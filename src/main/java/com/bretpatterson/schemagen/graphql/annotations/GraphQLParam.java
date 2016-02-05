@@ -1,5 +1,7 @@
 package com.bretpatterson.schemagen.graphql.annotations;
 
+import com.bretpatterson.schemagen.graphql.utils.AnnotationUtils;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -11,8 +13,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface GraphQLParam {
-	public static final String DEFAULT_NONE = "\n\t\t\n\t\t\n\uE000\uE001\uE002\n\t\t\t\t\n";
 	String name();
-	String defaultValue() default DEFAULT_NONE;
+	String defaultValue() default AnnotationUtils.DEFAULT_NULL;
 	boolean required() default false;
 }

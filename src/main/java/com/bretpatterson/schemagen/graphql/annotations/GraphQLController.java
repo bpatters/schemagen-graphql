@@ -4,6 +4,7 @@ import com.bretpatterson.schemagen.graphql.IMutationFactory;
 import com.bretpatterson.schemagen.graphql.IQueryFactory;
 import com.bretpatterson.schemagen.graphql.impl.DefaultMutationFactory;
 import com.bretpatterson.schemagen.graphql.impl.DefaultQueryFactory;
+import com.bretpatterson.schemagen.graphql.utils.AnnotationUtils;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -16,6 +17,14 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
 public @interface GraphQLController {
+
+
+	/**
+	 * When using relay this must be set, otherwise it's an optional object name to wrapper
+	 * this controllers top level queries within.
+	 * @return
+	 */
+	String rootObjectName() default AnnotationUtils.DEFAULT_NULL;
 	/**
 	 *
 	 * This factory that will be used to generate queries for this object, if any.

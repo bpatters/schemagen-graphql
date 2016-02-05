@@ -152,32 +152,50 @@ public class GraphQLSchemaBuilder {
 		this.setGraphQLObjectMapper(new GraphQLObjectMapper(typeFactory, typeMappers, typeNamingStrategy, relayNodeTypes));
 		// add our node handler first, as it's used by relay and we want people to be able to override it if they really want to
 		graphQLControllers.add(0, relayDefaultNodeHandler.build());
-		List<GraphQLFieldDefinition> mutations = null;
-		List<GraphQLFieldDefinition> queries = null;
 
-		GraphQLFieldDefinition.Builder viewerField = GraphQLFieldDefinition.newFieldDefinition().name("Views").staticValue(new Object());
-		GraphQLObjectType.Builder viewerObject = GraphQLObjectType.newObject().name("Views");
-		GraphQLFieldDefinition.Builder mutatorField = GraphQLFieldDefinition.newFieldDefinition().name("Mutations").staticValue(new Object());
-		GraphQLObjectType.Builder mutatorObject = GraphQLObjectType.newObject().name("Mutations");
+		ImmutableList.Builder<GraphQLFieldDefinition> rootViewFields  = ImmutableList.builder();
+		ImmutableList.Builder<GraphQLFieldDefinition> rootMutationFields = ImmutableList.builder();
 
 
 		for (Object queryHandler : graphQLControllers) {
 			GraphQLController graphQLController = queryHandler.getClass().getAnnotation(GraphQLController.class);
 			try {
-				viewerObject.fields(graphQLController.queryFactory().newInstance().newMethodQueriesForObject(getGraphQLObjectMapper(), queryHandler));
-				mutatorObject.fields(graphQLController.mutationFactory().newInstance().newMethodMutationsForObject(getGraphQLObjectMapper(), queryHandler));
+				List<GraphQLFieldDefinition> viewFields = graphQLController.queryFactory().newInstance().newMethodQueriesForObject(getGraphQLObjectMapper(), queryHandler);
+				List<GraphQLFieldDefinition> mutFields = graphQLController.mutationFactory().newInstance().newMethodMutationsForObject(getGraphQLObjectMapper(), queryHandler);
+				if (AnnotationUtils.isNullValue(graphQLController.rootObjectName())) {
+					rootViewFields.addAll(viewFields);
+					rootMutationFields.addAll(mutFields);
+				} else {
+					// creat root object field with the controllers root object name to hold the queries object wrapper
+					GraphQLFieldDefinition.Builder rootViewField = GraphQLFieldDefinition.newFieldDefinition().name(graphQLController.rootObjectName()).staticValue(new Object());
+					// create field object to contain this controllers query fields
+					GraphQLObjectType.Builder viewerObject = GraphQLObjectType.newObject().name(graphQLController.rootObjectName());
+					viewerObject.fields(viewFields);
+
+					rootViewField.type(viewerObject.build());
+					rootViewFields.add(rootViewField.build());
+
+					// create root object field with the controllers root object name to hold the mutations object wrapper
+					GraphQLFieldDefinition.Builder rootMutationField = GraphQLFieldDefinition.newFieldDefinition().name(graphQLController.rootObjectName()).staticValue(new Object());
+					// create field object to contain this controllers mutation fields
+					GraphQLObjectType.Builder mutObject = GraphQLObjectType.newObject().name(graphQLController.rootObjectName());
+					mutObject.fields(mutFields);
+
+					rootMutationField.type(mutObject.build());
+					rootMutationFields.add(rootMutationField.build());
+				}
+
+				// now do mutations
 			} catch (InstantiationException | IllegalAccessException ex) {
 				LOGGER.warn("Failed to load {}.  This is probably because of an unsatisfied runtime dependency.", ex);
 			}
 		}
 		GraphQLSchema.Builder builder = GraphQLSchema.newSchema();
 
-		viewerField.type(viewerObject.build());
-		rootQueryBuilder.field(viewerField.build());
+		rootQueryBuilder.fields(rootViewFields.build());
 		builder.query(rootQueryBuilder.build());
 
-		mutatorField.type(mutatorObject.build());
-		rootMutationBuilder.field(mutatorField.build());
+		rootMutationBuilder.fields(rootMutationFields.build());
 		builder.mutation(rootMutationBuilder.build());
 		schema = builder.build(graphQLObjectMapper.getInputTypes());
 

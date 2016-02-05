@@ -115,7 +115,7 @@ public class GraphQLSchemaBuilderTest {
 		assertEquals(Scalars.GraphQLString, queryType.getArgument("string").getType());
 		assertEquals(Scalars.GraphQLInt, queryType.getArgument("int").getType());
 		assertEquals(GraphQLInputObjectType.class, queryType.getArgument("test").getType().getClass());
-		assertEquals("RenamedTestInputType", queryType.getArgument("test").getType().getName());
+		assertEquals("RenamedTestInputType_Input", queryType.getArgument("test").getType().getName());
 	}
 
 	@Test

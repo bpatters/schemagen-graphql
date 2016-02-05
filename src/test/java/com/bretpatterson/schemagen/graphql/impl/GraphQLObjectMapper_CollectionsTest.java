@@ -325,29 +325,29 @@ public class GraphQLObjectMapper_CollectionsTest {
 	@Test
 	public void testGenericMapEnum() {
 
-		assertGenericMapEnumTypeMapping(Map.class.getSimpleName(),
+		assertGenericMapEnumTypeMapping(String.format("%s_%s",Map.class.getSimpleName(), TestEnum.class.getSimpleName()),
 				Scalars.GraphQLString,
 				graphQLObjectMapper.getOutputType(new TypeToken<Map<TestEnum, String>>() {
 				}.getType()));
-		assertGenericMapEnumTypeMapping(Map.class.getSimpleName(),
+		assertGenericMapEnumTypeMapping(String.format("%s_%s",Map.class.getSimpleName(), TestEnum.class.getSimpleName()),
 				Scalars.GraphQLInt,
 				graphQLObjectMapper.getOutputType(new TypeToken<Map<TestEnum, Integer>>() {
 				}.getType()));
-		assertGenericMapEnumTypeMapping(Map.class.getSimpleName(), Scalars.GraphQLLong, graphQLObjectMapper.getOutputType(new TypeToken<Map<TestEnum, Long>>() {
+		assertGenericMapEnumTypeMapping(String.format("%s_%s",Map.class.getSimpleName(), TestEnum.class.getSimpleName()), Scalars.GraphQLLong, graphQLObjectMapper.getOutputType(new TypeToken<Map<TestEnum, Long>>() {
 		}.getType()));
-		assertGenericMapEnumTypeMapping(Map.class.getSimpleName(),
+		assertGenericMapEnumTypeMapping(String.format("%s_%s",Map.class.getSimpleName(), TestEnum.class.getSimpleName()),
 				Scalars.GraphQLFloat,
 				graphQLObjectMapper.getOutputType(new TypeToken<Map<TestEnum, Float>>() {
 				}.getType()));
-		assertGenericMapEnumTypeMapping(Map.class.getSimpleName(),
+		assertGenericMapEnumTypeMapping(String.format("%s_%s",Map.class.getSimpleName(), TestEnum.class.getSimpleName()),
 				Scalars.GraphQLFloat,
 				graphQLObjectMapper.getOutputType(new TypeToken<Map<TestEnum, Double>>() {
 				}.getType()));
-		assertGenericMapEnumTypeMapping(Map.class.getSimpleName(),
+		assertGenericMapEnumTypeMapping(String.format("%s_%s",Map.class.getSimpleName(), TestEnum.class.getSimpleName()),
 				Scalars.GraphQLBoolean,
 				graphQLObjectMapper.getOutputType(new TypeToken<Map<TestEnum, Boolean>>() {
 				}.getType()));
-		assertGenericMapEnumTypeMapping(Map.class.getSimpleName(),
+		assertGenericMapEnumTypeMapping(String.format("%s_%s",Map.class.getSimpleName(), TestEnum.class.getSimpleName()),
 				expectedObjectType,
 				graphQLObjectMapper.getOutputType(new TypeToken<Map<TestEnum, CollectionsTestObject>>() {
 				}.getType()));
@@ -360,7 +360,7 @@ public class GraphQLObjectMapper_CollectionsTest {
 				}.getType());
 
 		assertEquals(GraphQLObjectType.class, outputType.getClass());
-		assertEquals(Map.class.getSimpleName(), outputType.getName());
+		assertEquals(String.format("%s_%s",Map.class.getSimpleName(), TestEnum.class.getSimpleName()), outputType.getName());
 
 		for (TestEnum fieldKey : EnumSet.allOf(TestEnum.class)) {
 			GraphQLObjectType objectType = (GraphQLObjectType) outputType;
@@ -378,7 +378,7 @@ public class GraphQLObjectMapper_CollectionsTest {
 
 			// now we verify the map type
 			objectType = (GraphQLObjectType) tempType;
-			assertEquals(Map.class.getSimpleName(), objectType.getName());
+			assertEquals(String.format("%s_%s",Map.class.getSimpleName(), TestEnum.class.getSimpleName()), objectType.getName());
 			assertEquals(GraphQLFieldDefinition.class, objectType.getFieldDefinition(TestEnum.KEY1.toString()).getClass());
 			assertEquals(GraphQLFieldDefinition.class, objectType.getFieldDefinition(TestEnum.KEY2.toString()).getClass());
 			assertEquals(GraphQLFieldDefinition.class, objectType.getFieldDefinition(TestEnum.KEY3.toString()).getClass());

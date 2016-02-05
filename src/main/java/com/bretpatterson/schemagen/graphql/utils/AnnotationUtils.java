@@ -16,6 +16,7 @@ import java.util.Map;
  */
 public class AnnotationUtils {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AnnotationUtils.class);
+	public static final String DEFAULT_NULL = "\n\t\t\n\t\t\n\uE000\uE001\uE002\n\t\t\t\t\n";
 	private static ClassLoader classLoader;
 	private static ClassPath classPath;
 
@@ -49,5 +50,9 @@ public class AnnotationUtils {
 		}
 
 		return results.build();
+	}
+
+	public static boolean isNullValue(String value) {
+		return DEFAULT_NULL.equals(value);
 	}
 }
