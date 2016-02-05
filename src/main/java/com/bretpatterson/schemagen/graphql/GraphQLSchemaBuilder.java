@@ -155,25 +155,30 @@ public class GraphQLSchemaBuilder {
 		List<GraphQLFieldDefinition> mutations = null;
 		List<GraphQLFieldDefinition> queries = null;
 
+		GraphQLFieldDefinition.Builder viewerField = GraphQLFieldDefinition.newFieldDefinition().name("Views").staticValue(new Object());
+		GraphQLObjectType.Builder viewerObject = GraphQLObjectType.newObject().name("Views");
+		GraphQLFieldDefinition.Builder mutatorField = GraphQLFieldDefinition.newFieldDefinition().name("Mutations").staticValue(new Object());
+		GraphQLObjectType.Builder mutatorObject = GraphQLObjectType.newObject().name("Mutations");
+
+
 		for (Object queryHandler : graphQLControllers) {
 			GraphQLController graphQLController = queryHandler.getClass().getAnnotation(GraphQLController.class);
 			try {
-				queries = graphQLController.queryFactory().newInstance().newMethodQueriesForObject(getGraphQLObjectMapper(), queryHandler);
-				mutations = graphQLController.mutationFactory().newInstance().newMethodMutationsForObject(getGraphQLObjectMapper(), queryHandler);
+				viewerObject.fields(graphQLController.queryFactory().newInstance().newMethodQueriesForObject(getGraphQLObjectMapper(), queryHandler));
+				mutatorObject.fields(graphQLController.mutationFactory().newInstance().newMethodMutationsForObject(getGraphQLObjectMapper(), queryHandler));
 			} catch (InstantiationException | IllegalAccessException ex) {
 				LOGGER.warn("Failed to load {}.  This is probably because of an unsatisfied runtime dependency.", ex);
 			}
 		}
 		GraphQLSchema.Builder builder = GraphQLSchema.newSchema();
 
-		if (queries != null && queries.size() > 0) {
-			rootQueryBuilder.fields(queries);
-			builder.query(rootQueryBuilder.build());
-		}
-		if (mutations != null && mutations.size() > 0) {
-			rootMutationBuilder.fields(mutations);
-			builder.mutation(rootMutationBuilder.build());
-		}
+		viewerField.type(viewerObject.build());
+		rootQueryBuilder.field(viewerField.build());
+		builder.query(rootQueryBuilder.build());
+
+		mutatorField.type(mutatorObject.build());
+		rootMutationBuilder.field(mutatorField.build());
+		builder.mutation(rootMutationBuilder.build());
 		schema = builder.build(graphQLObjectMapper.getInputTypes());
 
 		return schema;
