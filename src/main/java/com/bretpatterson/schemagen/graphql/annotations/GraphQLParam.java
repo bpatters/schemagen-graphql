@@ -13,7 +13,21 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
 public @interface GraphQLParam {
+	/**
+	 * The Query/Mutation parameter name
+	 * @return
+	 */
 	String name();
+
+	/**
+	 * The Default value for this property. Defaults to null.
+	 * @return
+	 */
 	String defaultValue() default AnnotationUtils.DEFAULT_NULL;
+
+	/**
+	 * Set to true if this property is required. Defaults to false
+	 * @return
+	 */
 	boolean required() default false;
 }

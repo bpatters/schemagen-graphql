@@ -11,7 +11,7 @@ import java.lang.reflect.Type;
 import java.util.TimeZone;
 
 /**
- * Created by bpatterson on 1/19/16.
+ * Maps a TimeZone object into a GraphQLString
  */
 @GraphQLTypeMapper(type=TimeZone.class)
 public class TimeZoneMapper implements IGraphQLTypeMapper {

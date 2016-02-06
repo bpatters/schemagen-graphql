@@ -6,15 +6,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation to use to configure a default type mapper for a type
+ * Fields annotated with this method will be ignored
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE})
-public @interface GraphQLTypeMapper{
+@Target({ElementType.FIELD})
+public @interface GraphQLIgnore {
 
-	/**
-	 * The Class this type mapper knows how to handle.
-	 * @return
-	 */
-	Class type();
 }

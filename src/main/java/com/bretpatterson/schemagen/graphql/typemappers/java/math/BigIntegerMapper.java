@@ -11,7 +11,7 @@ import java.lang.reflect.Type;
 import java.math.BigInteger;
 
 /**
- * Created by bpatterson on 2/3/16.
+ * DefaultType Mapper to convert a BigInteger to a GraphQLLong data type.
  */
 @GraphQLTypeMapper(type= BigInteger.class)
 public class BigIntegerMapper implements IGraphQLTypeMapper{

@@ -21,8 +21,13 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 /**
- * Abstract class that can be used as a starting point to implement a TypeMapper that supports generation of fields with parameters and data
- * fetchers that call methods on the object.
+ * Default implementation of the query factory. Converts a Method signature on an object
+ * into a:
+ * <OL>
+ *     <LI> List of GraphQL field definitions</LI>
+ *     <LI> GraphQLOutput type for the return type of the method.</LI>
+ *     <LI> Configures the Datafetcher based on the Object Instance, Field Name, Method Signature, and Type Factory</LI>
+ * </OL>
  */
 public class DefaultQueryFactory implements IQueryFactory {
 
@@ -52,11 +57,16 @@ public class DefaultQueryFactory implements IQueryFactory {
 			try {
 				GraphQLQuery graphQLQueryAnnotation = method.getAnnotation(GraphQLQuery.class);
 				if (graphQLQueryAnnotation != null) {
+					String methodName = graphQLQueryAnnotation.name();
+					if (AnnotationUtils.isNullValue(methodName)) {
+						methodName = method.getName();
+					}
+
 					IMethodDataFetcher dataFetcher = graphQLQueryAnnotation.dataFetcher().newInstance();
-					dataFetcher.setObjectMapper(graphQLObjectMapper.getObjectMapper());
+					dataFetcher.setTypeFactory(graphQLObjectMapper.getTypeFactory());
 					dataFetcher.setTargetObject(targetObject);
 					dataFetcher.setMethod(method);
-					dataFetcher.setFieldName(graphQLQueryAnnotation.name());
+					dataFetcher.setFieldName(methodName);
 
 					GraphQLFieldDefinition.Builder newField = GraphQLFieldDefinition.newFieldDefinition()
 							.name(graphQLQueryAnnotation.name());

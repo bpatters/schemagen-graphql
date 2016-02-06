@@ -11,7 +11,7 @@ import java.lang.reflect.Type;
 import java.math.BigDecimal;
 
 /**
- * Created by bpatterson on 2/3/16.
+ * Type Mapper that converts a BigDecimal.class type to a GraphQLFloat data type
  */
 @GraphQLTypeMapper(type= BigDecimal.class)
 public class BigDecimalMapper implements IGraphQLTypeMapper{

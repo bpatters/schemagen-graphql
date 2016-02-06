@@ -32,11 +32,17 @@ public class HelloWorld {
 				// register an object mappper so that parameter datatypes can be deserialized for method invocation
 				.registerTypeFactory(new JacksonTypeFactory(objectMapper))
 				// register the instance of Hello World as our query handler
-				.registerGraphQLContollerObjects(ImmutableList.<Object>of(helloWorld))
+				.registerGraphQLControllerObjects(ImmutableList.<Object>of(helloWorld))
 				.build();
 
+		String queryString = "{ helloWorld }";
+
+		if (args.length > 0) {
+			queryString = args[0];
+		}
+
 		// now lets execute a query against the schema
-		ExecutionResult result = new GraphQL(schema).execute("{ helloWorld }");
+		ExecutionResult result = new GraphQL(schema).execute(queryString);
 		if (result.getErrors().size() != 0) {
 			// if there are any errors serialize them using jackson and write them to stderr
 			System.err.println(objectMapper.writeValueAsString(result.getErrors()));

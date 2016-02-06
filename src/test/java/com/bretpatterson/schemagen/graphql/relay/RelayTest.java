@@ -41,7 +41,7 @@ public class RelayTest {
 	@Before
 	public void setup() {
 		this.schema = GraphQLSchemaBuilder.newBuilder()
-				.registerGraphQLContollerObjects(ImmutableList.<Object> of(gameController))
+				.registerGraphQLControllerObjects(ImmutableList.<Object> of(gameController))
 				.registerTypeFactory(new JacksonTypeFactory(new ObjectMapper()))
 				.registerNodeFactories(ImmutableList.of(new RelayGameFactory(gameController), new RelayUserFactory(gameController)))
 				.build();

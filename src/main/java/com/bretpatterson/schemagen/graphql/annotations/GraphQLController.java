@@ -25,6 +25,7 @@ public @interface GraphQLController {
 	 * @return
 	 */
 	String rootObjectName() default AnnotationUtils.DEFAULT_NULL;
+
 	/**
 	 *
 	 * This factory that will be used to generate queries for this object, if any.
@@ -34,5 +35,11 @@ public @interface GraphQLController {
 	 */
 	Class<? extends IQueryFactory> queryFactory() default DefaultQueryFactory.class;
 
+	/**
+	 * This factory that will be used to generate queries for this object, if any.
+	 * Default factory scans the object for {@link GraphQLQuery} annotated methods and turns
+	 * the methods into queries.
+	 * @return
+	 */
 	Class<? extends IMutationFactory> mutationFactory() default DefaultMutationFactory.class;
 }

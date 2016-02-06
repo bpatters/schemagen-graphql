@@ -12,7 +12,7 @@ import java.net.URI;
 
 
 /**
- * Created by bpatterson on 1/19/16.
+ * Default URI mapper that converts a URI to a GraphQLString
  */
 @GraphQLTypeMapper(type=URI.class)
 public class URIMapper implements IGraphQLTypeMapper {

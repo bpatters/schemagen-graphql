@@ -7,7 +7,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
- * Created by bpatterson on 1/25/16.
+ * Type naming strategy that uses the simple class name as the GraphQL type.
  */
 public class SimpleTypeNamingStrategy implements ITypeNamingStrategy {
 

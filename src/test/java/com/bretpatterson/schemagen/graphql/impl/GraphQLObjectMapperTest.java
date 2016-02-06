@@ -3,7 +3,9 @@ package com.bretpatterson.schemagen.graphql.impl;
 import com.bretpatterson.schemagen.graphql.GraphQLSchemaBuilder;
 import com.bretpatterson.schemagen.graphql.IGraphQLObjectMapper;
 import com.bretpatterson.schemagen.graphql.ITypeNamingStrategy;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLIgnore;
 import com.bretpatterson.schemagen.graphql.datafetchers.ITypeFactory;
+import com.bretpatterson.schemagen.graphql.relay.RelayConnection;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
@@ -15,12 +17,13 @@ import graphql.schema.GraphQLOutputType;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import com.bretpatterson.schemagen.graphql.relay.RelayConnection;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -30,7 +33,6 @@ public class GraphQLObjectMapperTest {
 
 	@Mock
 	ITypeFactory objectMapper;
-
 
 	@Before
 	public void setup() {
@@ -78,8 +80,8 @@ public class GraphQLObjectMapperTest {
 		assertTypeMapping("Float", Scalars.GraphQLFloat, graphQLObjectMapper.getOutputType(Double.class));
 		assertTypeMapping("Float", Scalars.GraphQLFloat, graphQLObjectMapper.getOutputType(double.class));
 		assertTypeMapping("Boolean", Scalars.GraphQLBoolean, graphQLObjectMapper.getOutputType(Boolean.class));
-		assertTypeMapping("com.bretpatterson.schemagen.graphql.impl.GraphQLObjectMapperTest",
-				GraphQLObjectType.newObject().name("com.bretpatterson.schemagen.graphql.impl.GraphQLObjectMapperTest").build(),
+		assertTypeMapping("com_bretpatterson_schemagen_graphql_impl_GraphQLObjectMapperTest",
+				GraphQLObjectType.newObject().name("com.bretpatterson_schemagen_graphql_impl_GraphQLObjectMapperTest").build(),
 				graphQLObjectMapper.getOutputType(this.getClass()));
 	}
 
@@ -107,18 +109,21 @@ public class GraphQLObjectMapperTest {
 		assertEquals(Scalars.GraphQLString, ((GraphQLObjectType) edgeObject.getFieldDefinition("cursor").getType()).getFieldDefinition("value").getType());
 	}
 
+	private class InnerGeneric<R, S> {
 
-	private class InnerGeneric<R,S> {
 		R rType;
 		S sType;
 	}
+
 	private class AnotherGenericObjectTest<R, S> {
+
 		R rType;
 		S sType;
 	}
 
 	private class GenericObjectTest<R, S> {
-		AnotherGenericObjectTest<S,R> srObject;
+
+		AnotherGenericObjectTest<S, R> srObject;
 		InnerGeneric<Float, Boolean> innerFloatDouble;
 		List<R> rList;
 		R rType;
@@ -131,7 +136,7 @@ public class GraphQLObjectMapperTest {
 				GraphQLSchemaBuilder.getDefaultTypeMappers(),
 				Optional.<ITypeNamingStrategy> absent(),
 				ImmutableList.<Class> of());
-		GraphQLObjectType type = (GraphQLObjectType) graphQLObjectMapper.getOutputType(new TypeToken<GenericObjectTest<Integer,String>>() {
+		GraphQLObjectType type = (GraphQLObjectType) graphQLObjectMapper.getOutputType(new TypeToken<GenericObjectTest<Integer, String>>() {
 		}.getType());
 
 		assertEquals(GenericObjectTest.class.getSimpleName(), type.getName());
@@ -151,21 +156,20 @@ public class GraphQLObjectMapperTest {
 		assertNotNull(field);
 		assertEquals(Scalars.GraphQLInt, field.getType());
 
-
 		// now verify the inner generic object with new type arguments
 		field = type.getFieldDefinition("innerFloatDouble");
 		assertNotNull(field);
 		assertEquals(GraphQLObjectType.class, field.getType().getClass());
 		assertEquals(InnerGeneric.class.getSimpleName(), field.getType().getName());
-		assertEquals(2, ((GraphQLObjectType)field.getType()).getFieldDefinitions().size());
-		assertEquals(Scalars.GraphQLFloat, ((GraphQLObjectType)field.getType()).getFieldDefinition("rType").getType());
-		assertEquals(Scalars.GraphQLBoolean, ((GraphQLObjectType)field.getType()).getFieldDefinition("sType").getType());
+		assertEquals(2, ((GraphQLObjectType) field.getType()).getFieldDefinitions().size());
+		assertEquals(Scalars.GraphQLFloat, ((GraphQLObjectType) field.getType()).getFieldDefinition("rType").getType());
+		assertEquals(Scalars.GraphQLBoolean, ((GraphQLObjectType) field.getType()).getFieldDefinition("sType").getType());
 
 		// now verify rest of fields on our object
 		field = type.getFieldDefinition("rList");
 		assertNotNull(field);
 		assertEquals(GraphQLList.class, field.getType().getClass());
-		assertEquals(Scalars.GraphQLInt, ((GraphQLList)field.getType()).getWrappedType());
+		assertEquals(Scalars.GraphQLInt, ((GraphQLList) field.getType()).getWrappedType());
 
 		field = type.getFieldDefinition("rType");
 		assertNotNull(field);
@@ -174,6 +178,29 @@ public class GraphQLObjectMapperTest {
 		field = type.getFieldDefinition("sType");
 		assertNotNull(field);
 		assertEquals(Scalars.GraphQLString, field.getType());
+	}
+
+	private class TestIgnoredFields {
+
+		@GraphQLIgnore
+		private Map<String, String> keyValueStore;
+		private String stringField;
+	}
+
+	@Test
+	public void testIgnoredFields() {
+		IGraphQLObjectMapper graphQLObjectMapper = new GraphQLObjectMapper(objectMapper,
+				GraphQLSchemaBuilder.getDefaultTypeMappers(),
+				Optional.<ITypeNamingStrategy> absent(),
+				ImmutableList.<Class> of());
+		GraphQLObjectType type = (GraphQLObjectType) graphQLObjectMapper.getOutputType(TestIgnoredFields.class);
+
+		assertEquals(TestIgnoredFields.class.getSimpleName(), type.getName());
+		assertEquals(1, type.getFieldDefinitions().size());
+		assertNull(type.getFieldDefinition("keyValueStore"));
+		assertNotNull(type.getFieldDefinition("stringField"));
+		assertEquals("stringField", type.getFieldDefinition("stringField").getName());
+		assertEquals(Scalars.GraphQLString, type.getFieldDefinition("stringField").getType());
 	}
 
 }

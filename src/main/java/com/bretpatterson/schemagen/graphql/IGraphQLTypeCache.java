@@ -3,7 +3,7 @@ package com.bretpatterson.schemagen.graphql;
 import java.lang.reflect.Type;
 
 /**
- * Created by bpatterson on 1/23/16.
+ * A simple abstraction around a key/value cache
  */
 public interface IGraphQLTypeCache<T> {
 	boolean containsKey(Type key);

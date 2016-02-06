@@ -6,13 +6,13 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
- * Generates type names using the full package name
+ * Generates type names using the full package name with . replaced with _
  */
 public class FullTypeNamingStrategy implements ITypeNamingStrategy {
 
 	public String getTypeName(Type type) {
 		Class theClass = (Class) ((type instanceof ParameterizedType) ? ((ParameterizedType) type).getRawType().getClass() :  type);
 
-		return theClass.getPackage().getName() + "." + theClass.getSimpleName();
+		return String.format("%s_%s",theClass.getPackage().getName().replace(".","_"), theClass.getSimpleName());
 	}
 }

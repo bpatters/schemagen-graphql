@@ -27,7 +27,18 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Created by bpatterson on 1/18/16.
+ * Main interface to generating your GraphQLSchema. This builder object allows you to configure your environment.
+ * <UL>
+ *     <LI> Controller Objects - Objects that contain top level Queries and Mutations</LI>
+ *     <LI> Type Mappers - Custom {@link IGraphQLTypeMapper} that know how to convert JavaTypes into GraphQLTypes</LI>
+ *     <LI> Type Factory - Custom {@link ITypeFactory} that knows how to convert generic deserialized JSON into Java Types. Currently only used to convert Query/Mutation Parameters to Method signature parameter types.</LI>
+ *     <LI> Type Naming Strategy - Optional - Register your own custom Name strategy for naming all JavaTypes to GraphQLTypes. Default TypeMappers use this, custom ones should honor it where possible. </LI>
+ *     <LI> Node Factories - These are factories that the {@link RelayDefaultNodeHandler} uses to handle node(id:string) calls and find the requested object by ID.</LI>
+ * </UL>
+ *
+ * All GraphQL Input types, aka parameters, will have the _Input string appended to their Type. This ensure the input type name does not collide with the output type name when an object is used
+ * for both input and output.
+ *
  */
 public class GraphQLSchemaBuilder {
 
@@ -67,7 +78,7 @@ public class GraphQLSchemaBuilder {
 	 * @param queryHandlers
 	 * @return
 	 */
-	public GraphQLSchemaBuilder registerGraphQLContollerObjects(List<Object> queryHandlers) {
+	public GraphQLSchemaBuilder registerGraphQLControllerObjects(List<Object> queryHandlers) {
 		this.graphQLControllers.addAll(queryHandlers);
 
 		return this;

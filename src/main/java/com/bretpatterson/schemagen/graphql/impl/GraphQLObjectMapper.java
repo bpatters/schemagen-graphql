@@ -1,24 +1,11 @@
 package com.bretpatterson.schemagen.graphql.impl;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.bretpatterson.schemagen.graphql.IGraphQLObjectMapper;
 import com.bretpatterson.schemagen.graphql.IGraphQLTypeCache;
 import com.bretpatterson.schemagen.graphql.IQueryFactory;
 import com.bretpatterson.schemagen.graphql.ITypeNamingStrategy;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLController;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLIgnore;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
 import com.bretpatterson.schemagen.graphql.datafetchers.CollectionConverterDataFetcher;
 import com.bretpatterson.schemagen.graphql.datafetchers.ITypeFactory;
@@ -32,7 +19,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import graphql.Scalars;
 import graphql.schema.GraphQLEnumType;
 import graphql.schema.GraphQLFieldDefinition;
@@ -47,9 +33,23 @@ import graphql.schema.GraphQLScalarType;
 import graphql.schema.GraphQLType;
 import graphql.schema.GraphQLTypeReference;
 import graphql.schema.TypeResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
 
 /**
- * Created by bpatterson on 1/19/16.
+ * This is the meat of the schema gen package. Utilizing the configured properties it will
+ * traverse the objects provided and generate a type hierarchy for GraphQL.
  */
 public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 
@@ -59,16 +59,16 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 	private ImmutableList<IGraphQLTypeMapper> interfaceTypeMappers;
 	private IGraphQLTypeCache<GraphQLOutputType> outputTypeCache = new GraphQLTypeCache<>();
 	private IGraphQLTypeCache<GraphQLInputType> inputTypeCache = new GraphQLTypeCache<>();
-	private ITypeFactory objectMapper;
+	private ITypeFactory typeFactory;
 	private ITypeNamingStrategy typeNamingStrategy = new SimpleTypeNamingStrategy();
 	private List<Class> relayNodeTypes;
 	private Stack<Map<String, Type>> typeArguments = new Stack<>();
 	private Set<GraphQLType> inputTypes = Sets.newHashSet();
 
-	public GraphQLObjectMapper(ITypeFactory objectMapper, List<IGraphQLTypeMapper> graphQLTypeMappers, Optional<ITypeNamingStrategy> typeNamingStrategy,
-			List<Class> relayNodeTypes) {
+	public GraphQLObjectMapper(ITypeFactory typeFactory, List<IGraphQLTypeMapper> graphQLTypeMappers, Optional<ITypeNamingStrategy> typeNamingStrategy,
+							   List<Class> relayNodeTypes) {
 
-		this.objectMapper = objectMapper;
+		this.typeFactory = typeFactory;
 		this.relayNodeTypes = relayNodeTypes;
 
 		if (typeNamingStrategy.isPresent()) {
@@ -239,8 +239,8 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 		return outputTypeCache;
 	}
 
-	public ITypeFactory getObjectMapper() {
-		return this.objectMapper;
+	public ITypeFactory getTypeFactory() {
+		return this.typeFactory;
 	}
 
 	private GraphQLInputType getInputType(GraphQLOutputType outputType) {
@@ -319,6 +319,9 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 			do {
 
 				for (Field field : classItem.getDeclaredFields()) {
+					// skip ignored fields
+					if (null != field.getAnnotation(GraphQLIgnore.class))
+						continue;
 					Optional<GraphQLFieldDefinition> fieldDefinitionOptional = getFieldType(type, field);
 					if (fieldDefinitionOptional.isPresent()) {
 						if (!field.getName().startsWith("$")) {

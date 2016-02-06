@@ -5,7 +5,8 @@ import graphql.schema.GraphQLFieldDefinition;
 import java.util.List;
 
 /**
- * Created by bpatterson on 1/28/16.
+ * An interface for a Factory that knows how to convert an instance object into a List of mutations.
+ * {@link com.bretpatterson.schemagen.graphql.impl.DefaultMutationFactory}
  */
 public interface IMutationFactory {
 

@@ -91,7 +91,7 @@ public class GraphQLSchemaBuilderTest {
 	@Test
 	public void testCustomTypeMappers() {
 		GraphQLSchema schema = GraphQLSchemaBuilder.newBuilder()
-				.registerGraphQLContollerObjects(ImmutableList.<Object> of(new TestController()))
+				.registerGraphQLControllerObjects(ImmutableList.<Object> of(new TestController()))
 				.registerTypeMappers(ImmutableList.<IGraphQLTypeMapper> of(new TestTypeMapper()))
 				.build();
 		assertEquals(GraphQLObjectType.class, schema.getType("FakeTestType").getClass());
@@ -99,7 +99,7 @@ public class GraphQLSchemaBuilderTest {
 
 	@Test
 	public void testController() {
-		GraphQLSchema schema = GraphQLSchemaBuilder.newBuilder().registerGraphQLContollerObjects(ImmutableList.<Object> of(new TestController())).build();
+		GraphQLSchema schema = GraphQLSchemaBuilder.newBuilder().registerGraphQLControllerObjects(ImmutableList.<Object> of(new TestController())).build();
 
 		GraphQLFieldDefinition queryType = schema.getQueryType().getFieldDefinition("testType");
 		assertEquals("testType", queryType.getName());
@@ -108,7 +108,7 @@ public class GraphQLSchemaBuilderTest {
 
 	@Test
 	public void testQueryArguments() {
-		GraphQLSchema schema = GraphQLSchemaBuilder.newBuilder().registerGraphQLContollerObjects(ImmutableList.<Object> of(new TestController())).build();
+		GraphQLSchema schema = GraphQLSchemaBuilder.newBuilder().registerGraphQLControllerObjects(ImmutableList.<Object> of(new TestController())).build();
 
 		GraphQLFieldDefinition queryType = schema.getQueryType().getFieldDefinition("testQueryArguments");
 		assertEquals("testQueryArguments", queryType.getName());
@@ -122,7 +122,7 @@ public class GraphQLSchemaBuilderTest {
 	public void testMutation() {
 		GraphQLSchema schema = GraphQLSchemaBuilder.newBuilder()
 				.registerTypeFactory(new JacksonTypeFactory(new ObjectMapper()))
-				.registerGraphQLContollerObjects(ImmutableList.<Object> of(new TestController()))
+				.registerGraphQLControllerObjects(ImmutableList.<Object> of(new TestController()))
 				.build();
 
 		GraphQLFieldDefinition mutationType = schema.getMutationType().getFieldDefinition("name");

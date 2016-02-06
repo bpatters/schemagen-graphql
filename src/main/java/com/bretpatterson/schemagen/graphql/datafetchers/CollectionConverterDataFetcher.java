@@ -7,14 +7,15 @@ import graphql.schema.PropertyDataFetcher;
 import java.util.Collection;
 
 /**
- * GraphQL only understands generic Collections and thus attempts to return a field
- * HashSet
+ * Add this to all Collection fields that can return null in your model. This will
+ * convert a null field into an empty List.
  */
 public class CollectionConverterDataFetcher extends PropertyDataFetcher {
 
 	public CollectionConverterDataFetcher(String propertyName) {
 		super(propertyName);
 	}
+
 	@Override
 	public Object get(DataFetchingEnvironment environment) {
 		Collection rv = (Collection)super.get(environment);

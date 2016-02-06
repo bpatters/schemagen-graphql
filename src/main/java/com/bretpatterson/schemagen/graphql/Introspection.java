@@ -1,7 +1,7 @@
 package com.bretpatterson.schemagen.graphql;
 
 /**
- * Created by bpatterson on 1/31/16.
+ * Static set of tools for schema generation and introspection.
  */
 public class Introspection {
 

@@ -12,7 +12,7 @@ import java.lang.reflect.Type;
 import java.util.EnumSet;
 
 /**
- * Created by bpatterson on 1/19/16.
+ * Default interface type mapper that handles all types of EnumSet.
  */
 @GraphQLTypeMapper(type = EnumSet.class)
 public class EnumSetMapper implements IGraphQLTypeMapper {

@@ -11,7 +11,8 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 
 /**
- * Created by bpatterson on 1/19/16.
+ * Default Interface type mapper that convers all types of Array to
+ * a GraphQLList of the array type.
  */
 @GraphQLTypeMapper(type = Array.class)
 public class ArrayMapper implements IGraphQLTypeMapper {

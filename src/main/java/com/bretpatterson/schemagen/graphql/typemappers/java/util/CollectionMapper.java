@@ -12,7 +12,8 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 
 /**
- * Created by bpatterson on 1/19/16.
+ * Default interface mapper for all Collections. Converts all collections
+ * into a GraphQLList type containing the type of object the collection contains.
  */
 @GraphQLTypeMapper(type = Collection.class)
 public class CollectionMapper implements IGraphQLTypeMapper {

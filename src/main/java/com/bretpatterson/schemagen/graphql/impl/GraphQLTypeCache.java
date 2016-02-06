@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by bpatterson on 1/23/16.
+ * Cache of GraphQL Types we've discovered during parsing.
  */
 public class GraphQLTypeCache<T> implements IGraphQLTypeCache<T> {
 	Map<Type, T> cache = new HashMap<Type, T>();

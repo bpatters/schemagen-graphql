@@ -9,7 +9,7 @@ import java.lang.reflect.Type;
 import java.util.Set;
 
 /**
- * A GraphQLObjectMapper that knows how to build a GraphQLDefinition for objects.
+ * A GraphQLObjectMapper knows how to build a GraphQLDefinition for objects.
  */
 public interface IGraphQLObjectMapper {
 
@@ -49,7 +49,7 @@ public interface IGraphQLObjectMapper {
 	 * Returns the object responsible for object type conversion.
 	 * @return
 	 */
-	ITypeFactory getObjectMapper();
+	ITypeFactory getTypeFactory();
 
 	/**
 	 * Get the raw type of this object for generic types

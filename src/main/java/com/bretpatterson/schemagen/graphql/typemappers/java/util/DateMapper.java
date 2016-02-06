@@ -11,7 +11,7 @@ import java.lang.reflect.Type;
 import java.util.Date;
 
 /**
- * Created by bpatterson on 1/19/16.
+ * Default Date Mapper that converts a Date to a GraphQL Long
  */
 @GraphQLTypeMapper(type= Date.class)
 public class DateMapper implements IGraphQLTypeMapper {
@@ -21,12 +21,12 @@ public class DateMapper implements IGraphQLTypeMapper {
 
 	@Override
 	public GraphQLOutputType getOutputType(IGraphQLObjectMapper objectMapper, Type type) {
-		return Scalars.GraphQLInt;
+		return Scalars.GraphQLLong;
 	}
 
 	@Override
 	public GraphQLInputType getInputType(IGraphQLObjectMapper objectMapper,  Type type) {
-		return Scalars.GraphQLInt;
+		return Scalars.GraphQLLong;
 	}
 
 }

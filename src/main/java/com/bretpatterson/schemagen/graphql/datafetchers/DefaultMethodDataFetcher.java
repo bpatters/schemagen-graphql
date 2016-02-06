@@ -15,12 +15,16 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Created by bpatterson on 1/19/16.
+ * Implementation of a IMethodDataFetcher that will invoke a method call with
+ * the provided GraphQL arguments. If null and a default value is provided for the argument
+ * then the default value will be used, otherwise null will be sent to the method.
+ * Parameter objects are converted from <i>GraphQL</i> Deserialized types to
+ * the arguments declared type using the regisered {@link ITypeFactory}.
  */
-public class MethodDataFetcher implements IMethodDataFetcher {
+public class DefaultMethodDataFetcher implements IMethodDataFetcher {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(MethodDataFetcher.class);
-	private ITypeFactory objectMapper;
+	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultMethodDataFetcher.class);
+	private ITypeFactory typeFactory;
 
 	private Method method;
 	private String fieldName;
@@ -43,7 +47,7 @@ public class MethodDataFetcher implements IMethodDataFetcher {
 
 	private Object getDefaultValue(String name) throws Exception {
 		if (parameterDefaultValue.containsKey(name)) {
-			return objectMapper.convertToType(parameters.get(name), parameterDefaultValue.get(name));
+			return typeFactory.convertToType(parameters.get(name), parameterDefaultValue.get(name));
 		} else {
 			return null;
 		}
@@ -61,10 +65,10 @@ public class MethodDataFetcher implements IMethodDataFetcher {
 						Object arg = environment.getArgument(param);
 						Type paramType = parameters.get(param);
 
-						arg = objectMapper.convertToType(paramType, arg);
+						arg = typeFactory.convertToType(paramType, arg);
 
 						arguments[index] = arg == null ? getDefaultValue(param)
-								: objectMapper.convertToType(
+								: typeFactory.convertToType(
 										(Class) (paramType instanceof ParameterizedType ? ((ParameterizedType) paramType).getRawType() : paramType), arg);
 						index++;
 					}
@@ -86,8 +90,7 @@ public class MethodDataFetcher implements IMethodDataFetcher {
 		this.method = method;
 	}
 
-	@Override
-	public void setObjectMapper(ITypeFactory objectMapper) {
-		this.objectMapper = objectMapper;
+	public void setTypeFactory(ITypeFactory typeFactory) {
+		this.typeFactory = typeFactory;
 	}
 }

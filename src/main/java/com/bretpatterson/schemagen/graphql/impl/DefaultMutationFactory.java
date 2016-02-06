@@ -22,7 +22,13 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 /**
- * Default implementation of the mutation factory. Generates a mutation method using the specified data fetcher.
+ * Default implementation of the mutation factory. Converts a Method signature on an object
+ * into a:
+ * <OL>
+ *     <LI> List of GraphQL field definitions</LI>
+ *     <LI> GraphQLOutput type for the return type of the method.</LI>
+ *     <LI> Configures the Datafetcher based on the Object Instance, Field Name, Method Signature, and Type Factory</LI>
+ * </OL>
  */
 public class DefaultMutationFactory implements IMutationFactory {
 
@@ -52,11 +58,16 @@ public class DefaultMutationFactory implements IMutationFactory {
 			try {
 				GraphQLMutation graphQLMutationAnnotation = method.getAnnotation(GraphQLMutation.class);
 				if (graphQLMutationAnnotation != null) {
+					String methodName = graphQLMutationAnnotation.name();
+					if (AnnotationUtils.isNullValue(methodName)) {
+						methodName = method.getName();
+					}
+
 					IMethodDataFetcher dataFetcher = graphQLMutationAnnotation.dataFetcher().newInstance();
-					dataFetcher.setObjectMapper(graphQLObjectMapper.getObjectMapper());
+					dataFetcher.setTypeFactory(graphQLObjectMapper.getTypeFactory());
 					dataFetcher.setTargetObject(targetObject);
 					dataFetcher.setMethod(method);
-					dataFetcher.setFieldName(graphQLMutationAnnotation.name());
+					dataFetcher.setFieldName(methodName);
 
 					GraphQLFieldDefinition.Builder newField = GraphQLFieldDefinition.newFieldDefinition()
 							.name(graphQLMutationAnnotation.name())
