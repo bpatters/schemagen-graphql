@@ -24,7 +24,14 @@ public @interface GraphQLController {
 	 * this controllers top level queries within.
 	 * @return
 	 */
-	String rootObjectName() default AnnotationUtils.DEFAULT_NULL;
+	String rootQueriesObjectName() default AnnotationUtils.DEFAULT_NULL;
+
+	/**
+	 * When using relay this must be set, otherwise it's an optional object name to wrapper
+	 * this controllers top level mutations within.
+	 * @return
+	 */
+	String rootMutationsObjectName() default AnnotationUtils.DEFAULT_NULL;
 
 	/**
 	 *
