@@ -19,6 +19,7 @@ public class AnnotationUtils {
 	public static final String DEFAULT_NULL = "\n\t\t\n\t\t\n\uE000\uE001\uE002\n\t\t\t\t\n";
 	private static ClassLoader classLoader;
 	private static ClassPath classPath;
+	public static final class DEFAULT_NULL_CLASS  {};
 
 	static  {
 		try {
@@ -54,5 +55,9 @@ public class AnnotationUtils {
 
 	public static boolean isNullValue(String value) {
 		return DEFAULT_NULL.equals(value);
+	}
+
+	public static boolean isNullValue(Class value) {
+		return DEFAULT_NULL_CLASS.class.equals(value);
 	}
 }

@@ -40,7 +40,7 @@ public class MapMapper implements IGraphQLTypeMapper {
 				// map of enums need a unique type definition. We do it based on the map_enumName convention
 				Class enumClassType = (Class) paramTypes[0];
 				GraphQLObjectType.Builder glType = GraphQLObjectType.newObject()
-						.name(String.format("%s_%s",graphQLObjectMapper.getTypeNamingStrategy().getTypeName(rawClass),graphQLObjectMapper.getTypeNamingStrategy().getTypeName(enumClassType)));
+						.name(String.format("%s_%s",graphQLObjectMapper.getTypeNamingStrategy().getTypeName(graphQLObjectMapper, rawClass),graphQLObjectMapper.getTypeNamingStrategy().getTypeName(graphQLObjectMapper, enumClassType)));
 				for (Object value : EnumSet.allOf(enumClassType)) {
 					glType.field(GraphQLFieldDefinition.newFieldDefinition()
 							.name(value.toString())
@@ -65,7 +65,7 @@ public class MapMapper implements IGraphQLTypeMapper {
 
 			Type[] paramTypes = parameterizedType.getActualTypeArguments();
 			if (((Class) paramTypes[0]).isEnum()) {
-				GraphQLInputObjectType.Builder glType = GraphQLInputObjectType.newInputObject().name(graphQLObjectMapper.getTypeNamingStrategy().getTypeName(rawClass));
+				GraphQLInputObjectType.Builder glType = GraphQLInputObjectType.newInputObject().name(graphQLObjectMapper.getTypeNamingStrategy().getTypeName(graphQLObjectMapper,rawClass));
 				Class enumClassType = (Class) paramTypes[0];
 				for (Object value : EnumSet.allOf(enumClassType)) {
 					glType.field(GraphQLInputObjectField.newInputObjectField()

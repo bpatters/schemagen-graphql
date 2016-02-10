@@ -164,8 +164,8 @@ public class GraphQLSchemaBuilder {
 		// add our node handler first, as it's used by relay and we want people to be able to override it if they really want to
 		graphQLControllers.add(0, relayDefaultNodeHandler.build());
 
-		ImmutableList.Builder<GraphQLFieldDefinition> rootViewFields  = ImmutableList.builder();
-		ImmutableList.Builder<GraphQLFieldDefinition> rootMutationFields = ImmutableList.builder();
+		ImmutableList.Builder<GraphQLFieldDefinition> rootViewFieldsBuilder  = ImmutableList.builder();
+		ImmutableList.Builder<GraphQLFieldDefinition> rootMutationFieldsBuilder = ImmutableList.builder();
 
 
 		for (Object queryHandler : graphQLControllers) {
@@ -174,30 +174,36 @@ public class GraphQLSchemaBuilder {
 				List<GraphQLFieldDefinition> viewFields = graphQLController.queryFactory().newInstance().newMethodQueriesForObject(getGraphQLObjectMapper(), queryHandler);
 				List<GraphQLFieldDefinition> mutFields = graphQLController.mutationFactory().newInstance().newMethodMutationsForObject(getGraphQLObjectMapper(), queryHandler);
 
-				if (AnnotationUtils.isNullValue(graphQLController.rootQueriesObjectName())) {
-					rootViewFields.addAll(viewFields);
-				} else {
-                    // creat root object field with the controllers root object name to hold the queries object wrapper
-                    GraphQLFieldDefinition.Builder rootViewField = GraphQLFieldDefinition.newFieldDefinition().name(graphQLController.rootQueriesObjectName()).staticValue(new Object());
-                    // create field object to contain this controllers query fields
-                    GraphQLObjectType.Builder viewerObject = GraphQLObjectType.newObject().name(graphQLController.rootQueriesObjectName());
-                    viewerObject.fields(viewFields);
+				if (viewFields.size() > 0) {
+					if (AnnotationUtils.isNullValue(graphQLController.rootQueriesObjectName())) {
+						rootViewFieldsBuilder.addAll(viewFields);
+					}
+					else {
+						// creat root object field with the controllers root object name to hold the queries object wrapper
+						GraphQLFieldDefinition.Builder rootViewField = GraphQLFieldDefinition.newFieldDefinition().name(graphQLController.rootQueriesObjectName()).staticValue(new Object());
+						// create field object to contain this controllers query fields
+						GraphQLObjectType.Builder viewerObject = GraphQLObjectType.newObject().name(graphQLController.rootQueriesObjectName());
+						viewerObject.fields(viewFields);
 
-                    rootViewField.type(viewerObject.build());
-                    rootViewFields.add(rootViewField.build());
-                }
+						rootViewField.type(viewerObject.build());
+						rootViewFieldsBuilder.add(rootViewField.build());
+					}
+				}
 
-                if (AnnotationUtils.isNullValue(graphQLController.rootMutationsObjectName())) {
-                    rootMutationFields.addAll(mutFields);
-                } else {
-					// create root object field with the controllers root object name to hold the mutations object wrapper
-					GraphQLFieldDefinition.Builder rootMutationField = GraphQLFieldDefinition.newFieldDefinition().name(graphQLController.rootMutationsObjectName()).staticValue(new Object());
-					// create field object to contain this controllers mutation fields
-					GraphQLObjectType.Builder mutObject = GraphQLObjectType.newObject().name(graphQLController.rootMutationsObjectName());
-					mutObject.fields(mutFields);
+				if (mutFields.size() > 0) {
+					if (AnnotationUtils.isNullValue(graphQLController.rootMutationsObjectName())) {
+						rootMutationFieldsBuilder.addAll(mutFields);
+					}
+					else {
+						// create root object field with the controllers root object name to hold the mutations object wrapper
+						GraphQLFieldDefinition.Builder rootMutationField = GraphQLFieldDefinition.newFieldDefinition().name(graphQLController.rootMutationsObjectName()).staticValue(new Object());
+						// create field object to contain this controllers mutation fields
+						GraphQLObjectType.Builder mutObject = GraphQLObjectType.newObject().name(graphQLController.rootMutationsObjectName());
+						mutObject.fields(mutFields);
 
-					rootMutationField.type(mutObject.build());
-					rootMutationFields.add(rootMutationField.build());
+						rootMutationField.type(mutObject.build());
+						rootMutationFieldsBuilder.add(rootMutationField.build());
+					}
 				}
 
 				// now do mutations
@@ -207,11 +213,17 @@ public class GraphQLSchemaBuilder {
 		}
 		GraphQLSchema.Builder builder = GraphQLSchema.newSchema();
 
-		rootQueryBuilder.fields(rootViewFields.build());
-		builder.query(rootQueryBuilder.build());
+		List<GraphQLFieldDefinition> rootViewFields = rootViewFieldsBuilder.build();
+		if (rootViewFields.size() > 0) {
+			rootQueryBuilder.fields(rootViewFieldsBuilder.build());
+			builder.query(rootQueryBuilder.build());
+		}
 
-		rootMutationBuilder.fields(rootMutationFields.build());
-		builder.mutation(rootMutationBuilder.build());
+		List<GraphQLFieldDefinition> rootMutationFields = rootMutationFieldsBuilder.build();
+		if (rootMutationFields.size() > 0) {
+			rootMutationBuilder.fields(rootMutationFieldsBuilder.build());
+			builder.mutation(rootMutationBuilder.build());
+		}
 		schema = builder.build(graphQLObjectMapper.getInputTypes());
 
 		return schema;

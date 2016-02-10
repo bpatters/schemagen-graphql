@@ -4,13 +4,17 @@ import com.bretpatterson.schemagen.graphql.GraphQLSchemaBuilder;
 import com.bretpatterson.schemagen.graphql.IGraphQLObjectMapper;
 import com.bretpatterson.schemagen.graphql.ITypeNamingStrategy;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLIgnore;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
+import com.bretpatterson.schemagen.graphql.datafetchers.DefaultMethodDataFetcher;
 import com.bretpatterson.schemagen.graphql.datafetchers.ITypeFactory;
 import com.bretpatterson.schemagen.graphql.relay.RelayConnection;
+import com.bretpatterson.schemagen.graphql.typemappers.IGraphQLTypeMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import graphql.Scalars;
 import graphql.schema.GraphQLFieldDefinition;
+import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLOutputType;
@@ -18,6 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
@@ -89,16 +94,16 @@ public class GraphQLObjectMapperTest {
 	public void testRelayConnectionType() {
 		IGraphQLObjectMapper graphQLObjectMapper = new GraphQLObjectMapper(objectMapper,
 				GraphQLSchemaBuilder.getDefaultTypeMappers(),
-				Optional.<ITypeNamingStrategy> absent(),
+				Optional.<ITypeNamingStrategy>of(new RelayTypeNamingStrategy()),
 				ImmutableList.<Class> of());
 		GraphQLObjectType type = (GraphQLObjectType) graphQLObjectMapper.getOutputType(new TypeToken<RelayConnection<String>>() {
 		}.getType());
 
-		assertEquals(RelayConnection.class.getSimpleName(), type.getName());
+		assertEquals("Relay_String_Connection",  type.getName());
 		assertNotNull(type.getFieldDefinition("edges"));
 		assertNotNull(type.getFieldDefinition("pageInfo"));
 		assertEquals(GraphQLList.class, type.getFieldDefinition("edges").getType().getClass());
-		assertEquals("Edge", ((GraphQLList) type.getFieldDefinition("edges").getType()).getWrappedType().getName());
+		assertEquals("Edge_String", ((GraphQLList) type.getFieldDefinition("edges").getType()).getWrappedType().getName());
 		assertEquals(GraphQLObjectType.class, ((GraphQLList) type.getFieldDefinition("edges").getType()).getWrappedType().getClass());
 		GraphQLObjectType edgeObject = (GraphQLObjectType) ((GraphQLList) type.getFieldDefinition("edges").getType()).getWrappedType();
 		assertNotNull(edgeObject.getFieldDefinition("node"));
@@ -139,7 +144,7 @@ public class GraphQLObjectMapperTest {
 		GraphQLObjectType type = (GraphQLObjectType) graphQLObjectMapper.getOutputType(new TypeToken<GenericObjectTest<Integer, String>>() {
 		}.getType());
 
-		assertEquals(GenericObjectTest.class.getSimpleName(), type.getName());
+		assertEquals("GenericObjectTest_Integer_String", type.getName());
 		assertEquals(5, type.getFieldDefinitions().size());
 		GraphQLFieldDefinition field;
 
@@ -147,7 +152,7 @@ public class GraphQLObjectMapperTest {
 		field = type.getFieldDefinition("srObject");
 		assertNotNull(field);
 		assertEquals(GraphQLObjectType.class, field.getType().getClass());
-		assertEquals(AnotherGenericObjectTest.class.getSimpleName(), field.getType().getName());
+		assertEquals("AnotherGenericObjectTest_String_Integer", field.getType().getName());
 		GraphQLObjectType anotherType = (GraphQLObjectType) field.getType();
 		field = anotherType.getFieldDefinition("rType");
 		assertNotNull(field);
@@ -160,7 +165,7 @@ public class GraphQLObjectMapperTest {
 		field = type.getFieldDefinition("innerFloatDouble");
 		assertNotNull(field);
 		assertEquals(GraphQLObjectType.class, field.getType().getClass());
-		assertEquals(InnerGeneric.class.getSimpleName(), field.getType().getName());
+		assertEquals("InnerGeneric_Float_Boolean", field.getType().getName());
 		assertEquals(2, ((GraphQLObjectType) field.getType()).getFieldDefinitions().size());
 		assertEquals(Scalars.GraphQLFloat, ((GraphQLObjectType) field.getType()).getFieldDefinition("rType").getType());
 		assertEquals(Scalars.GraphQLBoolean, ((GraphQLObjectType) field.getType()).getFieldDefinition("sType").getType());
@@ -201,6 +206,66 @@ public class GraphQLObjectMapperTest {
 		assertNotNull(type.getFieldDefinition("stringField"));
 		assertEquals("stringField", type.getFieldDefinition("stringField").getName());
 		assertEquals(Scalars.GraphQLString, type.getFieldDefinition("stringField").getType());
+	}
+
+
+	public class GenericObjectVariableResolution1<R, S> {
+		InnerGeneric<R,S> innerGeneric;
+	}
+
+	@Test
+	public void testGenericObjectsVariableResolution() {
+		IGraphQLObjectMapper graphQLObjectMapper = new GraphQLObjectMapper(objectMapper,
+						GraphQLSchemaBuilder.getDefaultTypeMappers(),
+						Optional.<ITypeNamingStrategy> absent(),
+						ImmutableList.<Class> of());
+
+		GraphQLObjectType outputType1 = (GraphQLObjectType) graphQLObjectMapper.getOutputType(new TypeToken<GenericObjectVariableResolution1<String,String>>(){}.getType());
+		GraphQLObjectType outputType2 = (GraphQLObjectType) graphQLObjectMapper.getOutputType(new TypeToken<GenericObjectVariableResolution1<Integer,Integer>>(){}.getType());
+
+		assertNotNull( outputType1.getFieldDefinition("innerGeneric"));
+		assertEquals("InnerGeneric_String_String", outputType1.getFieldDefinition("innerGeneric").getType().getName());
+
+		assertNotNull( outputType2.getFieldDefinition("innerGeneric"));
+		assertEquals("InnerGeneric_Integer_Integer", outputType2.getFieldDefinition("innerGeneric").getType().getName());
+	}
+
+	@GraphQLTypeMapper(type=String.class, dataFetcher = DefaultMethodDataFetcher.class)
+	private class TestTypeMappingDataFetcher implements IGraphQLTypeMapper {
+
+		@Override
+		public boolean handlesType(final IGraphQLObjectMapper graphQLObjectMapper, final Type type) {
+			return String.class.isAssignableFrom(graphQLObjectMapper.getClassFromType(type));
+		}
+
+		@Override
+		public GraphQLOutputType getOutputType(final IGraphQLObjectMapper graphQLObjectMapper, final Type type) {
+			return Scalars.GraphQLString;
+		}
+
+		@Override
+		public GraphQLInputType getInputType(final IGraphQLObjectMapper graphQLObjectMapper, final Type type) {
+			return Scalars.GraphQLString;
+		}
+	}
+
+
+	private class TestType {
+		String myfield;
+	}
+
+	@Test
+	public void testTypeMappingDataFetcher() {
+		IGraphQLObjectMapper graphQLObjectMapper = new GraphQLObjectMapper(objectMapper,
+								ImmutableList.<IGraphQLTypeMapper>builder().add(new TestTypeMappingDataFetcher()).addAll(GraphQLSchemaBuilder.getDefaultTypeMappers()).build(),
+								Optional.<ITypeNamingStrategy> absent(),
+								ImmutableList.<Class> of());
+
+		GraphQLObjectType objectType = (GraphQLObjectType) graphQLObjectMapper.getOutputType(TestType.class);
+
+		assertNotNull(objectType.getFieldDefinition("myfield"));
+		assertEquals(DefaultMethodDataFetcher.class, objectType.getFieldDefinition("myfield").getDataFetcher().getClass());
+
 	}
 
 }

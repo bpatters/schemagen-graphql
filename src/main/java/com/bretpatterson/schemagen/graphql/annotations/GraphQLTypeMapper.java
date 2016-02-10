@@ -1,5 +1,7 @@
 package com.bretpatterson.schemagen.graphql.annotations;
 
+import com.bretpatterson.schemagen.graphql.utils.AnnotationUtils;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -17,4 +19,11 @@ public @interface GraphQLTypeMapper{
 	 * @return
 	 */
 	Class type();
+
+
+	/**
+	 * Allows you to override the default datafetcher for this data type.
+	 * @return
+	 */
+	Class dataFetcher() default AnnotationUtils.DEFAULT_NULL_CLASS.class;
 }

@@ -36,7 +36,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Created by bpatterson on 1/27/16.
  */
-@GraphQLController
+@GraphQLController(rootQueriesObjectName = "Queries", rootMutationsObjectName = "Mutations")
 public class GameController {
 
 	GameManager gameManager = new GameManager();
@@ -195,7 +195,7 @@ public class GameController {
 		ImmutableList.Builder<Edge<UserDTO>> edges = ImmutableList.builder();
 
 		for (IUser user : users.getItems()) {
-			edges.add(new Edge<UserDTO>(convertToUserDTO(user), new ConnectionCursor(user.getId().toString())));
+			edges.add(new Edge<>(convertToUserDTO(user), new ConnectionCursor(user.getId().toString())));
 		}
 
 		rv.setEdges(edges.build());
@@ -214,7 +214,7 @@ public class GameController {
 		ImmutableList.Builder<Edge<GameDTO>> edges = ImmutableList.builder();
 
 		for (IGame game : games.getItems()) {
-			edges.add(new Edge(convertToGameDTO(game), new ConnectionCursor(game.getId().toString())));
+			edges.add(new Edge<>(convertToGameDTO(game), new ConnectionCursor(game.getId().toString())));
 		}
 
 		rv.setEdges(edges.build());

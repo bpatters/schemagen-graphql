@@ -25,6 +25,7 @@ import java.lang.reflect.Type;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Created by bpatterson on 1/23/16.
@@ -141,4 +142,56 @@ public class GraphQLSchemaBuilderTest {
 		assertEquals(0, result.getErrors().size());
 		assertEquals("The new name", newName);
 	}
+
+	@GraphQLController(rootQueriesObjectName = "QueriesScope", rootMutationsObjectName = "MutationsScope")
+	private class ControllerScoping {
+
+		@GraphQLQuery(name = "query1")
+		public String query1(@GraphQLParam(name = "param1") String param1) {
+			return param1;
+		}
+
+		@GraphQLMutation(name = "mutation1")
+		public String mutation1(@GraphQLParam(name = "param1") String param1) {
+			return param1;
+		}
+
+	}
+
+	@Test
+	public void testControllerObjectScoping() {
+		GraphQLSchema schema = GraphQLSchemaBuilder.newBuilder()
+				.registerTypeFactory(new JacksonTypeFactory(new ObjectMapper()))
+				.registerGraphQLControllerObjects(ImmutableList.<Object> of(new ControllerScoping()))
+				.build();
+
+		// validate query scope
+		GraphQLFieldDefinition queryScope = schema.getQueryType().getFieldDefinition("QueriesScope");
+		assertNotNull(queryScope);
+		assertEquals(GraphQLObjectType.class, queryScope.getType().getClass());
+
+		GraphQLObjectType queryObject = (GraphQLObjectType) queryScope.getType();
+		GraphQLFieldDefinition query1Field = queryObject.getFieldDefinition("query1");
+		assertNotNull(query1Field);
+		assertNotNull(query1Field.getArgument("param1"));
+		assertEquals(Scalars.GraphQLString, query1Field.getArgument("param1").getType());
+
+
+		// validate mutation scope
+		GraphQLFieldDefinition mutationScope = schema.getMutationType().getFieldDefinition("MutationsScope");
+		assertNotNull(mutationScope);
+		assertEquals(GraphQLObjectType.class, mutationScope.getType().getClass());
+		GraphQLObjectType mutationObject = (GraphQLObjectType) mutationScope.getType();
+		GraphQLFieldDefinition mutationField = mutationObject.getFieldDefinition("mutation1");
+		assertNotNull(mutationField);
+		assertNotNull(mutationField.getArgument("param1"));
+		assertEquals(Scalars.GraphQLString, mutationField.getArgument("param1").getType());
+	}
+
+
+
+
+
+
+
 }

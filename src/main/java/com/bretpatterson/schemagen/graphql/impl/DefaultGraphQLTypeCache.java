@@ -2,6 +2,7 @@ package com.bretpatterson.schemagen.graphql.impl;
 
 import com.bretpatterson.schemagen.graphql.IGraphQLTypeCache;
 
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,7 +10,7 @@ import java.util.Map;
 /**
  * Cache of GraphQL Types we've discovered during parsing.
  */
-public class GraphQLTypeCache<T> implements IGraphQLTypeCache<T> {
+public class DefaultGraphQLTypeCache<T> implements IGraphQLTypeCache<T> {
 	Map<Type, T> cache = new HashMap<Type, T>();
 
 	@Override
@@ -19,7 +20,12 @@ public class GraphQLTypeCache<T> implements IGraphQLTypeCache<T> {
 
 	@Override
 	public T put(Type type, T value) {
-		return cache.put(type, value);
+		// we can't cache parameterized types because Generic fields of Generic objects with same Generic variable will have same type,
+		// but the variable is under a different context so resolves differently.
+		if (!(type instanceof ParameterizedType)) {
+			cache.put(type, value);
+		}
+		return value;
 	}
 
 	@Override

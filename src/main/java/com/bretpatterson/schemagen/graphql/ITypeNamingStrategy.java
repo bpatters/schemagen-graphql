@@ -9,8 +9,9 @@ public interface ITypeNamingStrategy {
 
 	/**
 	 * Get the GraphQL type name for the specified type
+	 * @param graphQLObjectMapper
 	 * @param type
 	 * @return
 	 */
-	String getTypeName(Type type);
+	String getTypeName(IGraphQLObjectMapper graphQLObjectMapper, Type type);
 }
