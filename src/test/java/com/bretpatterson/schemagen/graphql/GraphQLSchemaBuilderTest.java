@@ -4,10 +4,8 @@ import com.bretpatterson.schemagen.graphql.annotations.GraphQLController;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLMutation;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLParam;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLQuery;
-import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeName;
 import com.bretpatterson.schemagen.graphql.impl.common.JacksonTypeFactory;
-import com.bretpatterson.schemagen.graphql.typemappers.IGraphQLTypeMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import graphql.ExecutionResult;
@@ -15,13 +13,10 @@ import graphql.GraphQL;
 import graphql.Scalars;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLInputObjectType;
-import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLObjectType;
-import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLSchema;
 import org.junit.Test;
 
-import java.lang.reflect.Type;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -32,31 +27,14 @@ import static org.junit.Assert.assertNotNull;
  */
 public class GraphQLSchemaBuilderTest {
 
-	@GraphQLTypeMapper(type = TestType.class)
-	private class TestTypeMapper implements IGraphQLTypeMapper {
-
-		@Override
-		public boolean handlesType(IGraphQLObjectMapper graphQLObjectMapper, Type type) {
-			return type == GraphQLSchemaBuilderTest.class;
-		}
-
-		@Override
-		public GraphQLOutputType getOutputType(IGraphQLObjectMapper graphQLObjectMapper, Type type) {
-			return GraphQLObjectType.newObject().name("FakeTestType").build();
-		}
-
-		@Override
-		public GraphQLInputType getInputType(IGraphQLObjectMapper graphQLObjectMapper, Type type) {
-			return GraphQLInputObjectType.newInputObject().name("FakeTestType").build();
-		}
-	}
-
-	private class TestType {
-	}
-
 	@GraphQLTypeName(name = "RenamedTestInputType")
 	private class RenameMe {
 
+	}
+
+	private class TestType {
+
+		String myfield;
 	}
 
 	@GraphQLController
@@ -87,15 +65,6 @@ public class GraphQLSchemaBuilderTest {
 		public String getName() {
 			return name;
 		}
-	}
-
-	@Test
-	public void testCustomTypeMappers() {
-		GraphQLSchema schema = GraphQLSchemaBuilder.newBuilder()
-				.registerGraphQLControllerObjects(ImmutableList.<Object> of(new TestController()))
-				.registerTypeMappers(ImmutableList.<IGraphQLTypeMapper> of(new TestTypeMapper()))
-				.build();
-		assertEquals(GraphQLObjectType.class, schema.getType("FakeTestType").getClass());
 	}
 
 	@Test
@@ -176,7 +145,6 @@ public class GraphQLSchemaBuilderTest {
 		assertNotNull(query1Field.getArgument("param1"));
 		assertEquals(Scalars.GraphQLString, query1Field.getArgument("param1").getType());
 
-
 		// validate mutation scope
 		GraphQLFieldDefinition mutationScope = schema.getMutationType().getFieldDefinition("MutationsScope");
 		assertNotNull(mutationScope);
@@ -187,11 +155,5 @@ public class GraphQLSchemaBuilderTest {
 		assertNotNull(mutationField.getArgument("param1"));
 		assertEquals(Scalars.GraphQLString, mutationField.getArgument("param1").getType());
 	}
-
-
-
-
-
-
 
 }

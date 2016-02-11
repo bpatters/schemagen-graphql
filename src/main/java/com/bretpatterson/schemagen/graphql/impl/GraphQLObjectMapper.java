@@ -5,6 +5,7 @@ import com.bretpatterson.schemagen.graphql.IGraphQLTypeCache;
 import com.bretpatterson.schemagen.graphql.IQueryFactory;
 import com.bretpatterson.schemagen.graphql.ITypeNamingStrategy;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLController;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLDataFetcher;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLIgnore;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
 import com.bretpatterson.schemagen.graphql.datafetchers.CollectionConverterDataFetcher;
@@ -51,8 +52,8 @@ import java.util.Set;
 import java.util.Stack;
 
 /**
- * This is the meat of the schema gen package. Utilizing the configured properties it will
- * traverse the objects provided and generate a type hierarchy for GraphQL.
+ * This is the meat of the schema gen package. Utilizing the configured properties it will traverse the objects provided and generate a type
+ * hierarchy for GraphQL.
  */
 public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 
@@ -69,7 +70,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 	private Set<GraphQLType> inputTypes = Sets.newHashSet();
 
 	public GraphQLObjectMapper(ITypeFactory typeFactory, List<IGraphQLTypeMapper> graphQLTypeMappers, Optional<ITypeNamingStrategy> typeNamingStrategy,
-							   List<Class> relayNodeTypes) {
+			List<Class> relayNodeTypes) {
 
 		this.typeFactory = typeFactory;
 		this.relayNodeTypes = relayNodeTypes;
@@ -112,14 +113,14 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 			} else {
 				// we might be mapping one variable name to another so do that here
 				// IE: MyObject<R,S> {
-				//       MyInnerObject<S,R>
-				//    }
-				//   MyInnerOBject<R,S> {
-				//       R rType;
-				//   }
+				// MyInnerObject<S,R>
+				// }
+				// MyInnerOBject<R,S> {
+				// R rType;
+				// }
 				// we need to update the current with the type from the parents map, so we pop, update, push
 				Map<String, Type> current = typeArguments.pop();
-				current.put(typeVariables[i].getName(), typeArguments.peek().get(((TypeVariable)arguments[i]).getName()));
+				current.put(typeVariables[i].getName(), typeArguments.peek().get(((TypeVariable) arguments[i]).getName()));
 				typeArguments.push(current);
 			}
 		}
@@ -136,23 +137,36 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 		} else {
 			LOGGER.info("Processing types {} field {}  ", type, field);
 			try {
+				Class fieldTypeClass = getClassFromType(field.getGenericType());
 
 				GraphQLOutputType fieldType = getOutputType(field.getGenericType());
 				GraphQLFieldDefinition.Builder builder = GraphQLFieldDefinition.newFieldDefinition().name(field.getName()).type(fieldType);
 				if (fieldType instanceof GraphQLList) {
 					builder.dataFetcher(new CollectionConverterDataFetcher(field.getName()));
 				}
-				// next check if it has a custom type mapper, if so attach the dataFetcher to the field
+				// next check if it has a custom type mapper, if so attach the dataFetcher to the field if specified
 				Optional<IGraphQLTypeMapper> typeMapper = getCustomTypeMapper(field.getGenericType());
 				if (typeMapper.isPresent()) {
 					GraphQLTypeMapper typeMapperAnnotation = typeMapper.get().getClass().getAnnotation(GraphQLTypeMapper.class);
 					try {
 						if (!AnnotationUtils.isNullValue(typeMapperAnnotation.dataFetcher())) {
-							builder.dataFetcher((DataFetcher)typeMapperAnnotation.dataFetcher().newInstance());
+							builder.dataFetcher((DataFetcher) typeMapperAnnotation.dataFetcher().newInstance());
 						}
 					} catch (InstantiationException | IllegalAccessException ex) {
 						Throwables.propagate(ex);
 					}
+				}
+				// if the field type class is not null and we have an annotation on it for a custom datafetcher than use it
+				if (fieldTypeClass != null) {
+					GraphQLDataFetcher dataFetcherAnnotation = (GraphQLDataFetcher) fieldTypeClass.getAnnotation(GraphQLDataFetcher.class);
+					if (dataFetcherAnnotation != null) {
+						try {
+							builder.dataFetcher((DataFetcher) dataFetcherAnnotation.dataFetcher().newInstance());
+						} catch (InstantiationException | IllegalAccessException ex) {
+							Throwables.propagate(ex);
+						}
+					}
+
 				}
 				return Optional.of(builder.build());
 			} catch (NotMappableException ex) {
@@ -268,7 +282,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 			return (GraphQLInputType) outputType;
 		} else if (outputType instanceof GraphQLObjectType) {
 			GraphQLObjectType objectType = (GraphQLObjectType) outputType;
-			GraphQLInputObjectType.Builder rv = GraphQLInputObjectType.newInputObject().name(objectType.getName()+"_Input");
+			GraphQLInputObjectType.Builder rv = GraphQLInputObjectType.newInputObject().name(objectType.getName() + "_Input");
 
 			for (GraphQLFieldDefinition field : objectType.getFieldDefinitions()) {
 				rv.field(GraphQLInputObjectField.newInputObjectField().name(field.getName()).type(getInputType(field.getType())).build());
@@ -304,7 +318,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 	}
 
 	private GraphQLObjectType buildObject(Type type, Class classType) {
-		GraphQLObjectType rv ;
+		GraphQLObjectType rv;
 		try {
 			// object types we create an object type and then recursively call ourselves to get the field types
 			String typeName = typeNamingStrategy.getTypeName(this, type);
@@ -408,7 +422,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 			return (Class) ((ParameterizedType) type).getRawType();
 		} else if (type instanceof TypeVariable) {
 			return (Class) typeArguments.peek().get(((TypeVariable) type).getName());
-		} else if (type instanceof WildcardType){
+		} else if (type instanceof WildcardType) {
 			// @TODO do a better job of wild card types here
 			return getClassFromType(((WildcardType) type).getLowerBounds()[0]);
 		} else {

@@ -9,17 +9,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Implementation of a IMethodDataFetcher that will invoke a method call with
- * the provided GraphQL arguments. If null and a default value is provided for the argument
- * then the default value will be used, otherwise null will be sent to the method.
- * Parameter objects are converted from <i>GraphQL</i> Deserialized types to
- * the arguments declared type using the regisered {@link ITypeFactory}.
+ * Implementation of a IMethodDataFetcher that will invoke a method call with the provided GraphQL arguments. If null and a default value is
+ * provided for the argument then the default value will be used, otherwise null will be sent to the method. Parameter objects are converted
+ * from <i>GraphQL</i> Deserialized types to the arguments declared type using the regisered {@link ITypeFactory}.
  */
 public class DefaultMethodDataFetcher implements IMethodDataFetcher {
 
@@ -29,7 +26,7 @@ public class DefaultMethodDataFetcher implements IMethodDataFetcher {
 	private Method method;
 	private String fieldName;
 	private Object targetObject;
-	private LinkedHashMap<String, Type> parameters = new LinkedHashMap<>();
+	private LinkedHashMap<String, Type> argumentTypeMap = new LinkedHashMap<>();
 	private Map<String, Object> parameterDefaultValue = Maps.newHashMap();
 
 	@Override
@@ -39,18 +36,33 @@ public class DefaultMethodDataFetcher implements IMethodDataFetcher {
 
 	@Override
 	public void addParam(String name, Type type, Optional<Object> defaultValue) {
-		parameters.put(name, type);
+		argumentTypeMap.put(name, type);
 		if (defaultValue.isPresent()) {
 			parameterDefaultValue.put(name, defaultValue.get());
 		}
 	}
 
-	private Object getDefaultValue(String name) throws Exception {
+	Object getDefaultValue(DataFetchingEnvironment environment, String name, Type argumentType) {
 		if (parameterDefaultValue.containsKey(name)) {
-			return typeFactory.convertToType(parameters.get(name), parameterDefaultValue.get(name));
+			return typeFactory.convertToType(argumentTypeMap.get(name), parameterDefaultValue.get(name));
 		} else {
 			return null;
 		}
+	}
+
+	Object convertToType(Type argumentType, Object value) {
+		if (value == null)
+			return value;
+
+		return typeFactory.convertToType(argumentType, value);
+	}
+
+	Object getParamValue(DataFetchingEnvironment environment, String argumentName, Type argumentType) {
+		Object value =environment.getArgument(argumentName);
+		if (value == null) {
+			value = getDefaultValue(environment, argumentName, argumentType);
+		}
+		return convertToType(argumentType, value);
 	}
 
 	@Override
@@ -59,17 +71,10 @@ public class DefaultMethodDataFetcher implements IMethodDataFetcher {
 		try {
 			for (Field field : environment.getFields()) {
 				if (field.getName().equals(fieldName)) {
-					Object[] arguments = new Object[parameters.size()];
+					Object[] arguments = new Object[argumentTypeMap.size()];
 					int index = 0;
-					for (String param : parameters.keySet()) {
-						Object arg = environment.getArgument(param);
-						Type paramType = parameters.get(param);
-
-						arg = typeFactory.convertToType(paramType, arg);
-
-						arguments[index] = arg == null ? getDefaultValue(param)
-								: typeFactory.convertToType(
-										(Class) (paramType instanceof ParameterizedType ? ((ParameterizedType) paramType).getRawType() : paramType), arg);
+					for (String argumentName : argumentTypeMap.keySet()) {
+						arguments[index] = getParamValue(environment, argumentName, argumentTypeMap.get(argumentName));
 						index++;
 					}
 					return method.invoke(targetObject, (Object[]) arguments);
