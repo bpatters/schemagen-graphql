@@ -1,16 +1,15 @@
 package com.bretpatterson.schemagen.graphql;
 
-import java.lang.reflect.Type;
-
 /**
  * A simple abstraction around a key/value cache
  */
 public interface IGraphQLTypeCache<T> {
-	boolean containsKey(Type key);
 
-	T put(Type type, T value);
+	boolean containsKey(String key);
 
-	T get(Type type);
+	T put(String typeName, T value);
 
-	T remove(Type t);
+	T get(String typeName);
+
+	T remove(String typeName);
 }

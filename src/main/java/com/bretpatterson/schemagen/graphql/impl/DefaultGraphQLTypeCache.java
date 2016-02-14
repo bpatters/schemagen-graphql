@@ -2,8 +2,6 @@ package com.bretpatterson.schemagen.graphql.impl;
 
 import com.bretpatterson.schemagen.graphql.IGraphQLTypeCache;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,30 +9,27 @@ import java.util.Map;
  * Cache of GraphQL Types we've discovered during parsing.
  */
 public class DefaultGraphQLTypeCache<T> implements IGraphQLTypeCache<T> {
-	Map<Type, T> cache = new HashMap<Type, T>();
+
+	Map<String, T> nameCache = new HashMap<String, T>();
 
 	@Override
-	public boolean containsKey(Type key) {
-		return cache.containsKey(key);
+	public boolean containsKey(String key) {
+		return nameCache.containsKey(key);
 	}
 
 	@Override
-	public T put(Type type, T value) {
-		// we can't cache parameterized types because Generic fields of Generic objects with same Generic variable will have same type,
-		// but the variable is under a different context so resolves differently.
-		if (!(type instanceof ParameterizedType)) {
-			cache.put(type, value);
-		}
+	public T put(String name, T value) {
+		nameCache.put(name, value);
 		return value;
 	}
 
 	@Override
-	public T get(Type type) {
-		return cache.get(type);
+	public T get(String name) {
+		return nameCache.get(name);
 	}
 
 	@Override
-	public T remove(Type t) {
-		return cache.remove(t);
+	public T remove(String t) {
+		return nameCache.remove(t);
 	}
 }

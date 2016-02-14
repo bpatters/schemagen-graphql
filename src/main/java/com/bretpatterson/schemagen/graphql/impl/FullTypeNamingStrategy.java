@@ -13,6 +13,10 @@ public class FullTypeNamingStrategy extends SimpleTypeNamingStrategy {
 		Class theClass = graphQLObjectMapper.getClassFromType(type);
 		String typeName = super.getTypeName(graphQLObjectMapper, type);
 
-		return String.format("%s_%s",theClass.getPackage().getName().replace(".","_"), typeName);
+		if (theClass.getPackage() != null) {
+			return String.format("%s_%s", theClass.getPackage().getName().replace(".", "_"), typeName);
+		} else {
+			return typeName;
+		}
 	}
 }
