@@ -3,6 +3,7 @@ package com.bretpatterson.schemagen.graphql.impl;
 import com.bretpatterson.schemagen.graphql.GraphQLSchemaBuilder;
 import com.bretpatterson.schemagen.graphql.ITypeNamingStrategy;
 import com.bretpatterson.schemagen.graphql.datafetchers.ITypeFactory;
+import com.bretpatterson.schemagen.graphql.datafetchers.MapConverterDataFetcher;
 import com.bretpatterson.schemagen.graphql.typemappers.java.util.MapMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -287,6 +288,8 @@ public class GraphQLObjectMapper_CollectionsTest {
 				}.getType()));
 	}
 
+
+
 	@Test
 	public void testGenericVectorMapping() {
 
@@ -310,6 +313,11 @@ public class GraphQLObjectMapper_CollectionsTest {
 				}.getType()));
 	}
 
+
+
+	private class GenericMapTestObject {
+		Map<String,String> mapField;
+	}
 	@Test
 	public void testGenericMapTypeMapping() {
 
@@ -329,6 +337,12 @@ public class GraphQLObjectMapper_CollectionsTest {
 				expectedObjectType,
 				graphQLObjectMapper.getOutputType(new TypeToken<Map<CollectionsTestObject, CollectionsTestObject>>() {
 				}.getType()));
+
+		GraphQLObjectType objectType = (GraphQLObjectType) graphQLObjectMapper.getOutputType(GenericMapTestObject.class);
+
+		assertNotNull(objectType.getFieldDefinition("mapField").getDataFetcher());
+		assertEquals(MapConverterDataFetcher.class, objectType.getFieldDefinition("mapField").getDataFetcher().getClass());
+
 	}
 
 	@Test

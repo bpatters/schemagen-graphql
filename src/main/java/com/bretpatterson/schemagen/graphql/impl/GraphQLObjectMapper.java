@@ -10,6 +10,7 @@ import com.bretpatterson.schemagen.graphql.annotations.GraphQLIgnore;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
 import com.bretpatterson.schemagen.graphql.datafetchers.CollectionConverterDataFetcher;
 import com.bretpatterson.schemagen.graphql.datafetchers.ITypeFactory;
+import com.bretpatterson.schemagen.graphql.datafetchers.MapConverterDataFetcher;
 import com.bretpatterson.schemagen.graphql.exceptions.NotMappableException;
 import com.bretpatterson.schemagen.graphql.relay.INode;
 import com.bretpatterson.schemagen.graphql.typemappers.IGraphQLTypeMapper;
@@ -45,6 +46,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -143,8 +145,16 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 
 				GraphQLOutputType fieldType = getOutputType(field.getGenericType());
 				GraphQLFieldDefinition.Builder builder = GraphQLFieldDefinition.newFieldDefinition().name(field.getName()).type(fieldType);
+
+				// field types of GraphQLList get a collection/map converter data fetcher by default
+				// this data fetcher can be overridden below if the user specifies a custom datafetcher
 				if (fieldType instanceof GraphQLList) {
-					builder.dataFetcher(new CollectionConverterDataFetcher(field.getName()));
+					if (Collection.class.isAssignableFrom(fieldTypeClass)) {
+						builder.dataFetcher(new CollectionConverterDataFetcher(field.getName()));
+					}
+					else if (Map.class.isAssignableFrom(fieldTypeClass)) {
+						builder.dataFetcher(new MapConverterDataFetcher(field.getName()));
+					}
 				}
 				// next check if it has a custom type mapper, if so attach the dataFetcher to the field if specified
 				Optional<IGraphQLTypeMapper> typeMapper = getCustomTypeMapper(field.getGenericType());
