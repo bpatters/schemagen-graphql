@@ -1,5 +1,6 @@
 package com.bretpatterson.schemagen.graphql.impl;
 
+import com.bretpatterson.schemagen.graphql.IDataFetcherFactory;
 import com.bretpatterson.schemagen.graphql.IGraphQLObjectMapper;
 import com.bretpatterson.schemagen.graphql.IGraphQLTypeCache;
 import com.bretpatterson.schemagen.graphql.IQueryFactory;
@@ -9,7 +10,7 @@ import com.bretpatterson.schemagen.graphql.annotations.GraphQLDataFetcher;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLIgnore;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
 import com.bretpatterson.schemagen.graphql.datafetchers.CollectionConverterDataFetcher;
-import com.bretpatterson.schemagen.graphql.datafetchers.ITypeFactory;
+import com.bretpatterson.schemagen.graphql.ITypeFactory;
 import com.bretpatterson.schemagen.graphql.datafetchers.MapConverterDataFetcher;
 import com.bretpatterson.schemagen.graphql.exceptions.NotMappableException;
 import com.bretpatterson.schemagen.graphql.relay.INode;
@@ -71,8 +72,12 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 	private Stack<Map<String, Type>> typeArguments = new Stack<>();
 	private Set<GraphQLType> inputTypes = Sets.newHashSet();
 	private String nodeTypeName;
+	private IDataFetcherFactory dataFetcherFactory = new DefaultDataFetcherFactory();
 
-	public GraphQLObjectMapper(ITypeFactory typeFactory, List<IGraphQLTypeMapper> graphQLTypeMappers, Optional<ITypeNamingStrategy> typeNamingStrategy,
+	public GraphQLObjectMapper(ITypeFactory typeFactory,
+							   List<IGraphQLTypeMapper> graphQLTypeMappers,
+							   Optional<ITypeNamingStrategy> typeNamingStrategy,
+							   Optional<IDataFetcherFactory> dataFetcherFactory,
 			List<Class> relayNodeTypes) {
 
 		this.typeFactory = typeFactory;
@@ -80,6 +85,10 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 
 		if (typeNamingStrategy.isPresent()) {
 			this.typeNamingStrategy = typeNamingStrategy.get();
+		}
+
+		if (dataFetcherFactory.isPresent()) {
+			this.setDataFetcherFactory(dataFetcherFactory.get());
 		}
 
 		ImmutableList.Builder<IGraphQLTypeMapper> interfaceTypeMappersBuilder = ImmutableList.builder();
@@ -172,13 +181,9 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 				if (fieldTypeClass != null) {
 					GraphQLDataFetcher dataFetcherAnnotation = (GraphQLDataFetcher) fieldTypeClass.getAnnotation(GraphQLDataFetcher.class);
 					if (dataFetcherAnnotation != null) {
-						try {
-							builder.dataFetcher((DataFetcher) dataFetcherAnnotation.dataFetcher().newInstance());
-						} catch (InstantiationException | IllegalAccessException ex) {
-							Throwables.propagate(ex);
-						}
+						DataFetcher dataFetcher = getDataFetcherFactory().newFieldDataFetcher(this, field, dataFetcherAnnotation);
+						builder.dataFetcher(dataFetcher);
 					}
-
 				}
 				return Optional.of(builder.build());
 			} catch (NotMappableException ex) {
@@ -442,5 +447,13 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 
 	public Set<GraphQLType> getInputTypes() {
 		return inputTypes;
+	}
+
+	public IDataFetcherFactory getDataFetcherFactory() {
+		return dataFetcherFactory;
+	}
+
+	public void setDataFetcherFactory(IDataFetcherFactory dataFetcherFactory) {
+		this.dataFetcherFactory = dataFetcherFactory;
 	}
 }

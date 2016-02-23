@@ -1,5 +1,6 @@
 package com.bretpatterson.schemagen.graphql.annotations;
 
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

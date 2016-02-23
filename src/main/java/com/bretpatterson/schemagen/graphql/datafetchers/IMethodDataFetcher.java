@@ -1,11 +1,9 @@
 package com.bretpatterson.schemagen.graphql.datafetchers;
 
+import com.bretpatterson.schemagen.graphql.ITypeFactory;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLQuery;
-import com.google.common.base.Optional;
-import graphql.schema.DataFetcher;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 
 /**
  * Implementation of a DataFetcher that contains knowledge of how to call into a method.
@@ -13,7 +11,7 @@ import java.lang.reflect.Type;
  * a reference to the ITypeFactory for converting from Generic GraphQL deserialized Types
  * into the parameter types of the method.
  */
-public interface IMethodDataFetcher extends DataFetcher {
+public interface IMethodDataFetcher extends IDataFetcher {
 
 	/**
 	 * Called to let the data fetcher know about the Type factory registered for
@@ -43,12 +41,11 @@ public interface IMethodDataFetcher extends DataFetcher {
 	void setTargetObject(Object targetObject);
 
 	/**
-	 * When parsing the method to build it's signature we will make repeated calls
-	 * to this method to add a parameter. The invocation order will be the exact order
-	 * of the parameters on the method.
-	 * @param name the parameter name
-	 * @param type the generic type of the parametterj
-	 * @param defaultValue optionally the default value defined
+	 * Invokes the method on the target object with the specified arguments
+	 * @param method the method to invoke
+	 * @param targetObject the target object
+	 * @param arguments the arguments to the method
+	 * @return return value
 	 */
-	void addParam(String name, Type type, Optional<Object> defaultValue);
+	Object invokeMethod(Method method, Object targetObject, Object[] arguments);
 }

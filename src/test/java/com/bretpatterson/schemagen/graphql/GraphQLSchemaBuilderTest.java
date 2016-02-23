@@ -155,5 +155,4 @@ public class GraphQLSchemaBuilderTest {
 		assertNotNull(mutationField.getArgument("param1"));
 		assertEquals(Scalars.GraphQLString, mutationField.getArgument("param1").getType());
 	}
-
 }

@@ -2,7 +2,6 @@ package com.bretpatterson.schemagen.graphql;
 
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLController;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
-import com.bretpatterson.schemagen.graphql.datafetchers.ITypeFactory;
 import com.bretpatterson.schemagen.graphql.impl.GraphQLObjectMapper;
 import com.bretpatterson.schemagen.graphql.relay.IRelayNodeFactory;
 import com.bretpatterson.schemagen.graphql.relay.annotations.RelayNodeFactory;
@@ -51,11 +50,13 @@ public class GraphQLSchemaBuilder {
 	private List<Object> graphQLControllers = new LinkedList<>();
 	private List<IGraphQLTypeMapper> typeMappers = new LinkedList<>();
 	private Optional<ITypeNamingStrategy> typeNamingStrategy = Optional.absent();
+	private Optional<IDataFetcherFactory> dataFetcherFactory = Optional.absent();
 	private RelayDefaultNodeHandler.Builder relayDefaultNodeHandler = RelayDefaultNodeHandler.builder();
 	private List<Class> relayNodeTypes = Lists.newArrayList();
 	private ITypeFactory typeFactory;
-	ClassLoader classLoader;
-	ClassPath classPath;
+	private ClassLoader classLoader;
+	private ClassPath classPath;
+	private boolean relayEnabled = false;
 
 	private GraphQLSchemaBuilder() {
 		this.rootQueryBuilder = GraphQLObjectType.newObject().name("Query").description("Root of Query Schema");
@@ -96,6 +97,7 @@ public class GraphQLSchemaBuilder {
 
 		return this;
 	}
+
 
 	/**
 	 * This typeFactory will be used to convert between GraphQL value types to Java native value types when passing parameters to
@@ -140,6 +142,18 @@ public class GraphQLSchemaBuilder {
 		return this;
 	}
 
+	public GraphQLSchemaBuilder registerDataFetcherFactory(IDataFetcherFactory dataFetcherFactory) {
+		this.dataFetcherFactory = Optional.fromNullable(dataFetcherFactory);
+
+		return this;
+	}
+
+	public GraphQLSchemaBuilder relayEnabled(boolean relayEnabled) {
+		this.relayEnabled = relayEnabled;
+
+		return this;
+	}
+
 	@VisibleForTesting
 	public static List<IGraphQLTypeMapper> getDefaultTypeMappers() {
 		// install all of the default type mappers we include in our packages
@@ -160,9 +174,11 @@ public class GraphQLSchemaBuilder {
 	public GraphQLSchema build() {
 
 		this.typeMappers.addAll(0, getDefaultTypeMappers());
-		this.setGraphQLObjectMapper(new GraphQLObjectMapper(typeFactory, typeMappers, typeNamingStrategy, relayNodeTypes));
+		this.setGraphQLObjectMapper(new GraphQLObjectMapper(typeFactory, typeMappers, typeNamingStrategy, dataFetcherFactory, relayNodeTypes));
 		// add our node handler first, as it's used by relay and we want people to be able to override it if they really want to
-		graphQLControllers.add(0, relayDefaultNodeHandler.build());
+		if (relayEnabled) {
+			graphQLControllers.add(0, relayDefaultNodeHandler.build());
+		}
 
 		ImmutableList.Builder<GraphQLFieldDefinition> rootViewFieldsBuilder  = ImmutableList.builder();
 		ImmutableList.Builder<GraphQLFieldDefinition> rootMutationFieldsBuilder = ImmutableList.builder();

@@ -44,6 +44,7 @@ public class RelayTest {
 				.registerGraphQLControllerObjects(ImmutableList.<Object> of(gameController))
 				.registerTypeFactory(new JacksonTypeFactory(new ObjectMapper()))
 				.registerNodeFactories(ImmutableList.of(new RelayGameFactory(gameController), new RelayUserFactory(gameController)))
+				.relayEnabled(true)
 				.build();
 
 	}

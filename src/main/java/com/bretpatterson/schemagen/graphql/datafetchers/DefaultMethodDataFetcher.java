@@ -1,5 +1,6 @@
 package com.bretpatterson.schemagen.graphql.datafetchers;
 
+import com.bretpatterson.schemagen.graphql.ITypeFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
@@ -8,6 +9,7 @@ import graphql.schema.DataFetchingEnvironment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
@@ -58,7 +60,7 @@ public class DefaultMethodDataFetcher implements IMethodDataFetcher {
 	}
 
 	Object getParamValue(DataFetchingEnvironment environment, String argumentName, Type argumentType) {
-		Object value =environment.getArgument(argumentName);
+		Object value = environment.getArgument(argumentName);
 		if (value == null) {
 			value = getDefaultValue(environment, argumentName, argumentType);
 		}
@@ -68,23 +70,28 @@ public class DefaultMethodDataFetcher implements IMethodDataFetcher {
 	@Override
 	public Object get(DataFetchingEnvironment environment) {
 
-		try {
-			for (Field field : environment.getFields()) {
-				if (field.getName().equals(fieldName)) {
-					Object[] arguments = new Object[argumentTypeMap.size()];
-					int index = 0;
-					for (String argumentName : argumentTypeMap.keySet()) {
-						arguments[index] = getParamValue(environment, argumentName, argumentTypeMap.get(argumentName));
-						index++;
-					}
-					return method.invoke(targetObject, (Object[]) arguments);
+		for (Field field : environment.getFields()) {
+			if (field.getName().equals(fieldName)) {
+				Object[] arguments = new Object[argumentTypeMap.size()];
+				int index = 0;
+				for (String argumentName : argumentTypeMap.keySet()) {
+					arguments[index] = getParamValue(environment, argumentName, argumentTypeMap.get(argumentName));
+					index++;
 				}
+				return invokeMethod(method, targetObject, arguments);
 			}
-		} catch (Exception ex) {
-			LOGGER.error("Unexpected error.", ex);
-			Throwables.propagate(ex);
 		}
 		return null;
+
+	}
+
+	public Object invokeMethod(Method method, Object targetObject, Object[] arguments) {
+		try {
+			return method.invoke(targetObject, (Object[]) arguments);
+		} catch (Exception ex) {
+			LOGGER.error("Unexpected exception ", ex);
+			throw Throwables.propagate(ex);
+		}
 	}
 
 	public void setFieldName(String fieldName) {

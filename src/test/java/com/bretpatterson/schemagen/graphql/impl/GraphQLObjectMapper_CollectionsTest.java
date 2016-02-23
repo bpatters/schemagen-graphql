@@ -1,8 +1,9 @@
 package com.bretpatterson.schemagen.graphql.impl;
 
 import com.bretpatterson.schemagen.graphql.GraphQLSchemaBuilder;
+import com.bretpatterson.schemagen.graphql.IDataFetcherFactory;
 import com.bretpatterson.schemagen.graphql.ITypeNamingStrategy;
-import com.bretpatterson.schemagen.graphql.datafetchers.ITypeFactory;
+import com.bretpatterson.schemagen.graphql.ITypeFactory;
 import com.bretpatterson.schemagen.graphql.datafetchers.MapConverterDataFetcher;
 import com.bretpatterson.schemagen.graphql.typemappers.java.util.MapMapper;
 import com.google.common.base.Optional;
@@ -21,7 +22,6 @@ import org.mockito.Mock;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -68,7 +68,8 @@ public class GraphQLObjectMapper_CollectionsTest {
 
 		graphQLObjectMapper = new GraphQLObjectMapper(objectMapper,
 				GraphQLSchemaBuilder.getDefaultTypeMappers(),
-				Optional.<ITypeNamingStrategy> absent(),
+				Optional.<ITypeNamingStrategy>absent(),
+				Optional.<IDataFetcherFactory>absent(),
 				ImmutableList.<Class> of());
 	}
 

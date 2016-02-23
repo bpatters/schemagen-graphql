@@ -1,6 +1,6 @@
 package com.bretpatterson.schemagen.graphql;
 
-import com.bretpatterson.schemagen.graphql.datafetchers.ITypeFactory;
+
 import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLType;
@@ -56,11 +56,23 @@ public interface IGraphQLObjectMapper {
 	 * @param type
 	 * @return
 	 */
-	public Class getClassFromType(Type type);
+	Class getClassFromType(Type type);
 
 	/**
 	 * Returns all input types created.
 	 * @return
 	 */
-	public Set<GraphQLType> getInputTypes();
+	Set<GraphQLType> getInputTypes();
+
+	/**
+	 * Get the datafetcher factory
+	 * @return
+	 */
+	IDataFetcherFactory getDataFetcherFactory() ;
+
+	/**
+	 *
+	 * @param dataFetcherFactory
+	 */
+	void setDataFetcherFactory(IDataFetcherFactory dataFetcherFactory);
 }

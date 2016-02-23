@@ -1,6 +1,6 @@
 package com.bretpatterson.schemagen.graphql.examples.common;
 
-import com.bretpatterson.schemagen.graphql.datafetchers.ITypeFactory;
+import com.bretpatterson.schemagen.graphql.ITypeFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.google.common.base.Throwables;

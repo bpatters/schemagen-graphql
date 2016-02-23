@@ -1,4 +1,4 @@
-package com.bretpatterson.schemagen.graphql.datafetchers;
+package com.bretpatterson.schemagen.graphql;
 
 import java.lang.reflect.Type;
 

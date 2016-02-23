@@ -8,7 +8,8 @@ import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.PropertyDataFetcher;
 
 /**
- * This converts all Maps into a List of Entries that can be fetched
+ * This converts all Maps into a List of Entries who's key/values are accessible
+ * This gets added to all Map's by default so they can be exposed through GraphQL
  */
 public class MapConverterDataFetcher extends PropertyDataFetcher {
 

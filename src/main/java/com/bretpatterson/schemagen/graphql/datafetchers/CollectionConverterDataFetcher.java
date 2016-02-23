@@ -7,8 +7,8 @@ import graphql.schema.PropertyDataFetcher;
 import java.util.Collection;
 
 /**
- * Add this to all Collection fields that can return null in your model. This will
- * convert a null field into an empty List.
+ * This converts any Collection object to a ImmutableList of the objects.
+ * Additionally this converts a null value to an empty list.
  */
 public class CollectionConverterDataFetcher extends PropertyDataFetcher {
 

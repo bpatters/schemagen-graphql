@@ -2,8 +2,7 @@ package com.bretpatterson.schemagen.graphql.annotations;
 
 import com.bretpatterson.schemagen.graphql.IMutationFactory;
 import com.bretpatterson.schemagen.graphql.IQueryFactory;
-import com.bretpatterson.schemagen.graphql.impl.DefaultMutationFactory;
-import com.bretpatterson.schemagen.graphql.impl.DefaultQueryFactory;
+import com.bretpatterson.schemagen.graphql.impl.DefaultQueryAndMutationFactory;
 import com.bretpatterson.schemagen.graphql.utils.AnnotationUtils;
 
 import java.lang.annotation.ElementType;
@@ -40,13 +39,13 @@ public @interface GraphQLController {
 	 * the methods into queries.
 	 * @return
 	 */
-	Class<? extends IQueryFactory> queryFactory() default DefaultQueryFactory.class;
+	Class<? extends IQueryFactory> queryFactory() default DefaultQueryAndMutationFactory.class;
 
 	/**
-	 * This factory that will be used to generate queries for this object, if any.
-	 * Default factory scans the object for {@link GraphQLQuery} annotated methods and turns
-	 * the methods into queries.
+	 * This factory that will be used to generate mutations for this object, if any.
+	 * Default factory scans the object for {@link GraphQLMutation} annotated methods and turns
+	 * the methods into mutations.
 	 * @return
 	 */
-	Class<? extends IMutationFactory> mutationFactory() default DefaultMutationFactory.class;
+	Class<? extends IMutationFactory> mutationFactory() default DefaultQueryAndMutationFactory.class;
 }
