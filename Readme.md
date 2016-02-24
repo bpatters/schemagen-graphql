@@ -11,16 +11,16 @@ Java GraphQL Schema Generation and Execution Framework
 
 ### Overview
 
-This is a java to GraphQL schema generation and execution package. This originated the week of January 18th, 2016 as a hackweek 
+This is a java to GraphQL schema generation and execution package. This originated the week of January 18th, 2016 as a HackWeek 
 project I worked on.  The goal of this is a production level quality project that can be used to build
 a Java based GraphQL server. 
 The following principles will guide this projects evolution:
 
 - An un-opinionated view of the container the server will use.
 - An un-opinionated view of the serialization model you will be using
-- Sensible defaults so that setup to use is extremely easy and straightforward
+- Sensible defaults so that setup is extremely easy and straightforward
 - Extensible enough to handle the most extreme Enterprise scenarios
-- A minimal set of dependencies to utlize the framework.
+- A minimal set of dependencies to utilize the framework.
 
 Initial Versions will have a base version of Java 7 and require the Guava Module. Future versions will possibly be based on Java 8 and
 possibly require the Guava module (TBD).
@@ -34,7 +34,7 @@ possibly require the Guava module (TBD).
 
 ### Hello World
 
-The Hellow World program below is the simplest GraphQL server you can right. It exposes the GraphQL schema as a CLI
+The Hello World program below is the simplest GraphQL server you can write. It exposes the GraphQL schema as a CLI
 that you can run from the command line.
 
 Here is a simple hello world usage scenario
@@ -120,7 +120,7 @@ Sensible defaults are provided for most things. However, there are a things that
 -- with [@GraphQLMutation annotated methods](https://github.com/bpatters/schemagen-graphql/blob/master/src/main/java/com/bretpatterson/schemagen/graphql/annotations/GraphQLMutation.java)
 
 
-To build your schema you use the [GraphQLSchemaBuilder](https://github.com/bpatters/schemagen-graphql/blob/master/src/main/java/com/bretpatterson/schemagen/graphql/GraphQLSchemaBuilder.java) in conjuction with the required objects above. To create your GraphQL schema do the following:
+To build your schema you use the [GraphQLSchemaBuilder](https://github.com/bpatters/schemagen-graphql/blob/master/src/main/java/com/bretpatterson/schemagen/graphql/GraphQLSchemaBuilder.java) in conjunction with the required objects above. To create your GraphQL schema do the following:
 
 ```java
 
@@ -135,12 +135,12 @@ schemaBuilder.registerTypeFactory(new JacksonTypeFactory(objectMapper));
 
 
 // Finally Build your GraphQL schema
-GraphQLSchema schem - schemaBuilder.build();
+GraphQLSchema schema - schemaBuilder.build();
 ```
 
 That's all!
 
-Now it's up to you as to how you expose your schema to the outside world, but assuming you have a querystring you want to execute within your schema you can run the schema using:
+Now it's up to you as to how you expose your schema to the outside world, but assuming you have a query string you want to execute within your schema you can run the schema using:
 
 ```java
 
@@ -148,7 +148,7 @@ ExecutionResult result = new GraphQL(schema).execute(queryString);
 
 ```
 
-That's it! Any errors encounted can be obtained via ```result.getErrors()```  and your data results can be obtained via the ```result.getData()```.
+That's it! Any errors encountered can be obtained via ```result.getErrors()```  and your data results can be obtained via the ```result.getData()```.
 
 
 
