@@ -22,6 +22,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Default implementation of the query/mutation factory. Converts a Method signature on an object into a:
@@ -119,6 +120,15 @@ public class DefaultQueryAndMutationFactory implements IQueryFactory, IMutationF
 		return graphQLObjectMapper.getOutputType(method.getGenericReturnType());
 	}
 
+
+	protected void updateDataFetcher(Optional<IDataFetcher> dataFetcher, String name, Object defaultValue, Type paramType,  Optional<GraphQLParam> graphQLParam) {
+		if (dataFetcher.isPresent()) {
+			dataFetcher.get().addParam(name,
+					paramType,
+					Optional.<Object> fromNullable(defaultValue));
+		}
+	}
+
 	/**
 	 * Generates a list of GraphQLArgument objects for the specified method while passing parameter information to the datafetcher for use
 	 * during fetching.
@@ -139,20 +149,24 @@ public class DefaultQueryAndMutationFactory implements IQueryFactory, IMutationF
 		int index = 0;
 		for (Type paramType : method.getGenericParameterTypes()) {
 			GraphQLParam graphQLParam = findAnnotation(parameterAnnotations[index], GraphQLParam.class);
+			String name;
+			String defaultValue;
 
 			if (graphQLParam == null) {
-				LOGGER.error("Missing @GraphParam annotation on parameter index {} for method {}", index, method.getName());
-				continue;
-			}
+				name = String.format("arg%d", index);
+				defaultValue = null;
+				// these get hidden from the GraphQLSchema but are stored for injection. IE Graph QL Context param etc
+				updateDataFetcher(dataFetcher, name, defaultValue, paramType, Optional.<GraphQLParam>absent());
+			} else {
+				name = graphQLParam.name();
+				defaultValue = AnnotationUtils.isNullValue(graphQLParam.defaultValue()) ? null : graphQLParam.defaultValue();
 
-			paramBuilder = GraphQLArgument.newArgument().name(graphQLParam.name()).type(graphQLObjectMapper.getInputType(paramType));
-			if (dataFetcher.isPresent()) {
-				dataFetcher.get().addParam(graphQLParam.name(),
-						paramType,
-						Optional.<Object> fromNullable(AnnotationUtils.isNullValue(graphQLParam.defaultValue()) ? null : graphQLParam.defaultValue()));
-			}
+				paramBuilder = GraphQLArgument.newArgument().name(graphQLParam.name()).type(graphQLObjectMapper.getInputType(paramType));
 
-			argumentBuilder.add(paramBuilder.build());
+				updateDataFetcher(dataFetcher, name, defaultValue, paramType, Optional.of(graphQLParam));
+
+				argumentBuilder.add(paramBuilder.build());
+			}
 			index++;
 		}
 

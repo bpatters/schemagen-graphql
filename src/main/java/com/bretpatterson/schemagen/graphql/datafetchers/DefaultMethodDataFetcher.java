@@ -59,10 +59,26 @@ public class DefaultMethodDataFetcher implements IMethodDataFetcher {
 		return typeFactory.convertToType(argumentType, value);
 	}
 
+	Object getInjectableParamValue(DataFetchingEnvironment environment, String argumentName, Type argumentType) {
+		Object context = environment.getContext();
+		// allow Context injection into method parameters
+		if (context != null &&
+			argumentType instanceof Class &&
+			context.getClass().isAssignableFrom((Class)argumentType)) {
+			return context;
+		}
+
+		return null;
+	}
+
 	Object getParamValue(DataFetchingEnvironment environment, String argumentName, Type argumentType) {
 		Object value = environment.getArgument(argumentName);
 		if (value == null) {
 			value = getDefaultValue(environment, argumentName, argumentType);
+		}
+		// no value here, so lets check and return possible injectable value
+		if (value == null) {
+			return getInjectableParamValue(environment, argumentName, argumentType);
 		}
 		return convertToType(argumentType, value);
 	}
