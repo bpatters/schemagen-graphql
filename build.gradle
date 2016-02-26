@@ -11,6 +11,7 @@ allprojects {
     group 'com.bretpatterson'
 
     apply plugin: 'java'
+    apply plugin: 'jacoco'
     apply plugin: 'maven'
     apply plugin: 'signing'
     apply plugin: 'maven-publish'
@@ -19,11 +20,36 @@ allprojects {
     ext {
         jacksonVersion = "2.5.1";
         graphQLJavaVersion = "2.0.0";
+        jacocoReportsDir = "$buildDir/reports/jacoco"
     }
+
     version = releaseVersion ? releaseVersion : new SimpleDateFormat('yyyy-MM-dd\'T\'HH-mm-ss').format(new Date())
 
     jar {
         from "${project.rootDir}/LICENSE.md"
+    }
+
+    defaultTasks "compileJava", "test", "jacocoTestReport"
+
+
+    jacocoTestReport {
+        dependsOn build
+        reports {
+            xml.enabled false
+            csv.enabled false
+            html.destination jacocoReportsDir
+        }
+    }
+    jacoco {
+        toolVersion = "0.7.1.201405082137"
+    }
+
+    test {
+        jacoco {
+            append = false
+            destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
+            classDumpFile = file("$buildDir/jacoco/classpathdumps")
+        }
     }
 
     task sourcesJar(type: Jar) {
