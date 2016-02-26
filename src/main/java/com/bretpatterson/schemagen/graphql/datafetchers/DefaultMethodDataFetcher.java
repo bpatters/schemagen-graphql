@@ -78,7 +78,7 @@ public class DefaultMethodDataFetcher implements IMethodDataFetcher {
 					arguments[index] = getParamValue(environment, argumentName, argumentTypeMap.get(argumentName));
 					index++;
 				}
-				return invokeMethod(method, targetObject, arguments);
+				return invokeMethod(method, targetObject != null ? targetObject : environment.getSource(), arguments);
 			}
 		}
 		return null;
