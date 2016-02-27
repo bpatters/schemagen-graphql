@@ -12,6 +12,7 @@ import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
 import com.bretpatterson.schemagen.graphql.datafetchers.CollectionConverterDataFetcher;
 import com.bretpatterson.schemagen.graphql.ITypeFactory;
 import com.bretpatterson.schemagen.graphql.datafetchers.DefaultMethodDataFetcher;
+import com.bretpatterson.schemagen.graphql.datafetchers.IDataFetcher;
 import com.bretpatterson.schemagen.graphql.datafetchers.MapConverterDataFetcher;
 import com.bretpatterson.schemagen.graphql.exceptions.NotMappableException;
 import com.bretpatterson.schemagen.graphql.relay.INode;
@@ -22,7 +23,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import graphql.Scalars;
@@ -39,6 +39,7 @@ import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLScalarType;
 import graphql.schema.GraphQLType;
 import graphql.schema.GraphQLTypeReference;
+import graphql.schema.PropertyDataFetcher;
 import graphql.schema.TypeResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,15 +77,14 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 	private Set<GraphQLType> inputTypes = Sets.newHashSet();
 	private String nodeTypeName;
 	private IDataFetcherFactory dataFetcherFactory = new DefaultDataFetcherFactory();
+	private Class<? extends IDataFetcher> defaultMethodDataFetcher;
 
-	public GraphQLObjectMapper(ITypeFactory typeFactory,
-							   List<IGraphQLTypeMapper> graphQLTypeMappers,
-							   Optional<ITypeNamingStrategy> typeNamingStrategy,
-							   Optional<IDataFetcherFactory> dataFetcherFactory,
-			List<Class> relayNodeTypes) {
+	public GraphQLObjectMapper(ITypeFactory typeFactory, List<IGraphQLTypeMapper> graphQLTypeMappers, Optional<ITypeNamingStrategy> typeNamingStrategy,
+			Optional<IDataFetcherFactory> dataFetcherFactory, Optional<Class<? extends IDataFetcher>> defaultMethodDataFetcher, List<Class> relayNodeTypes) {
 
 		this.typeFactory = typeFactory;
 		this.relayNodeTypes = relayNodeTypes;
+		this.defaultMethodDataFetcher = defaultMethodDataFetcher.or(DefaultMethodDataFetcher.class);
 
 		if (typeNamingStrategy.isPresent()) {
 			this.typeNamingStrategy = typeNamingStrategy.get();
@@ -142,86 +142,73 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 		}
 	}
 
-	private Optional<GraphQLFieldDefinition.Builder> generateFieldDefinition(Type type, Type fieldType, String name) {
-		LOGGER.info("Generating field {} of type {} for parentType {}  {}  ", name, fieldType, type);
-		try {
-			Class fieldTypeClass  = getClassFromType(fieldType);
-
-			GraphQLOutputType graphQLFieldType = getOutputType(fieldType);
-			GraphQLFieldDefinition.Builder builder = GraphQLFieldDefinition.newFieldDefinition().name(name).type(graphQLFieldType);
-
-			// field types of GraphQLList get a collection/map converter data fetcher by default
-			// this data fetcher can be overridden below if the user specifies a custom datafetcher
-			if (graphQLFieldType instanceof GraphQLList) {
-				if (Collection.class.isAssignableFrom(fieldTypeClass)) {
-					builder.dataFetcher(new CollectionConverterDataFetcher(name));
-				} else if (Map.class.isAssignableFrom(fieldTypeClass)) {
-					builder.dataFetcher(new MapConverterDataFetcher(name));
-				}
-			}
-			// next check if it has a custom type mapper, if so attach the dataFetcher to the field if specified
-			Optional<IGraphQLTypeMapper> typeMapper = getCustomTypeMapper(fieldType);
-			if (typeMapper.isPresent()) {
-				GraphQLTypeMapper typeMapperAnnotation = typeMapper.get().getClass().getAnnotation(GraphQLTypeMapper.class);
-				try {
-					if (!AnnotationUtils.isNullValue(typeMapperAnnotation.dataFetcher())) {
-						builder.dataFetcher((DataFetcher) typeMapperAnnotation.dataFetcher().newInstance());
-					}
-				} catch (InstantiationException | IllegalAccessException ex) {
-					Throwables.propagate(ex);
-				}
-			}
-
-			return Optional.of(builder);
-		} catch (NotMappableException ex) {
-			LOGGER.info("types field type {} not supported so ignored field named {}", type, fieldType, name);
-			return Optional.absent();
-		}
-	}
-
 	private Optional<String> getFieldNameFromMethod(Method m) {
 		if (m.getName().startsWith("get")) {
 			return Optional.of(m.getName().substring(3, 4).toLowerCase() + m.getName().substring(4));
 		}
 		if (m.getName().startsWith("is")) {
-			return Optional.of(m.getName().substring(2,3).toLowerCase() + m.getName().substring(3));
+			return Optional.of(m.getName().substring(2, 3).toLowerCase() + m.getName().substring(3));
 		}
 		return Optional.absent();
 	}
 
 	private Optional<GraphQLFieldDefinition> getFieldType(Type type, Method method) {
-		Type returnType = method.getGenericReturnType();
-		Optional<String> name = getFieldNameFromMethod(method);
+		Type fieldType = method.getGenericReturnType();
+		Class fieldTypeClass = getClassFromType(fieldType);
+		Optional<String> fieldName = getFieldNameFromMethod(method);
+		GraphQLOutputType graphQLFieldType = getOutputType(fieldType);
+		Class<? extends IDataFetcher> dataFetcherClass = defaultMethodDataFetcher;
 
-		if (!name.isPresent()) {
+		if (!fieldName.isPresent()) {
 			return Optional.absent();
 		}
-		Optional<GraphQLFieldDefinition.Builder> optionalBuilder =  generateFieldDefinition(type, returnType, name.get());
-		if (!optionalBuilder.isPresent()) {
-			return Optional.absent();
-		}
-		GraphQLFieldDefinition.Builder builder =  optionalBuilder.get();
 
+		GraphQLFieldDefinition.Builder builder = GraphQLFieldDefinition.newFieldDefinition().name(fieldName.get()).type(graphQLFieldType);
+
+		// first check if it has a custom type mapper, if so attach the dataFetcher to the field if specified
+		Optional<IGraphQLTypeMapper> typeMapper = getCustomTypeMapper(fieldType);
+		if (typeMapper.isPresent()) {
+			GraphQLTypeMapper typeMapperAnnotation = typeMapper.get().getClass().getAnnotation(GraphQLTypeMapper.class);
+			if (!AnnotationUtils.isNullValue(typeMapperAnnotation.dataFetcher())) {
+				dataFetcherClass = typeMapperAnnotation.dataFetcher();
+			}
+		}
+
+		// next check if there is annotation on the method
 		GraphQLDataFetcher dataFetcherAnnotation = method.getAnnotation(GraphQLDataFetcher.class);
-		// check field for a datafetcher annotation in case it's not on the method
+		// next check field for a datafetcher annotation in case it's not on the method
 		if (dataFetcherAnnotation == null) {
 			Class typeClass = getClassFromType(type);
 			try {
-				Field field = typeClass.getDeclaredField(name.get());
+				Field field = typeClass.getDeclaredField(fieldName.get());
 				if (field != null) {
 					dataFetcherAnnotation = field.getAnnotation(GraphQLDataFetcher.class);
+
 				}
 			} catch (Exception ex) {
-				Throwables.propagate(ex);
+				LOGGER.info("No field matching method:" + method.getName());
 			}
 		}
+
+		// explicit annotation for data fetcher?
 		if (dataFetcherAnnotation != null) {
-			DataFetcher dataFetcher = getDataFetcherFactory().newMethodDataFetcher(this, null, method, name.get(), dataFetcherAnnotation.getClass());
-			builder.dataFetcher(dataFetcher);
-		} else {
-			DataFetcher dataFetcher = getDataFetcherFactory().newMethodDataFetcher(this, null, method, name.get(), DefaultMethodDataFetcher.class);
-			builder.dataFetcher(dataFetcher);
+			dataFetcherClass = dataFetcherAnnotation.dataFetcher();
 		}
+
+		IDataFetcher dataFetcher;
+		// if we have a datafetcher lets create it using the factory
+		dataFetcher = getDataFetcherFactory().newMethodDataFetcher(this, null, method, fieldName.get(), dataFetcherClass);
+
+		// field types of GraphQLList get a collection/map converter data fetcher by default
+		// this data fetcher can be overridden below if the user specifies a custom datafetcher
+		if (graphQLFieldType instanceof GraphQLList) {
+			if (Collection.class.isAssignableFrom(fieldTypeClass)) {
+				dataFetcher = new CollectionConverterDataFetcher(dataFetcher);
+			} else if (Map.class.isAssignableFrom(fieldTypeClass)) {
+				dataFetcher = new MapConverterDataFetcher(dataFetcher);
+			}
+		}
+		builder.dataFetcher(dataFetcher);
 
 		return Optional.of(builder.build());
 	}
@@ -238,19 +225,43 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 			LOGGER.info("Processing types {} field {}  ", type, field);
 			try {
 				Class fieldTypeClass = getClassFromType(field.getGenericType());
-				Optional<GraphQLFieldDefinition.Builder> optionalBuilder = generateFieldDefinition(type, field.getGenericType(), field.getName());
-				if (!optionalBuilder.isPresent()) {
-					return Optional.absent();
+				GraphQLOutputType graphQLFieldType = getOutputType(field.getGenericType());
+				GraphQLFieldDefinition.Builder builder = GraphQLFieldDefinition.newFieldDefinition().name(field.getName()).type(graphQLFieldType);
+				Class<? extends IDataFetcher> dataFetcherClass = null;
+
+				// first check if it has a custom type mapper, if so attach the dataFetcher to the field if specified
+				Optional<IGraphQLTypeMapper> typeMapper = getCustomTypeMapper(field.getGenericType());
+				if (typeMapper.isPresent()) {
+					GraphQLTypeMapper typeMapperAnnotation = typeMapper.get().getClass().getAnnotation(GraphQLTypeMapper.class);
+					if (!AnnotationUtils.isNullValue(typeMapperAnnotation.dataFetcher())) {
+						dataFetcherClass = typeMapperAnnotation.dataFetcher();
+					}
 				}
-				GraphQLFieldDefinition.Builder builder = optionalBuilder.get();
 
 				// if the field type class is not null and we have an annotation on it for a custom datafetcher than use it
 				if (fieldTypeClass != null) {
 					GraphQLDataFetcher dataFetcherAnnotation = (GraphQLDataFetcher) fieldTypeClass.getAnnotation(GraphQLDataFetcher.class);
 					if (dataFetcherAnnotation != null) {
-						DataFetcher dataFetcher = getDataFetcherFactory().newFieldDataFetcher(this, field, dataFetcherAnnotation);
-						builder.dataFetcher(dataFetcher);
+						dataFetcherClass = dataFetcherAnnotation.dataFetcher();
 					}
+				}
+
+				DataFetcher dataFetcher = new PropertyDataFetcher(field.getName());
+				if (dataFetcherClass != null) {
+					dataFetcher = getDataFetcherFactory().newFieldDataFetcher(this, field, dataFetcherClass);
+				}
+				// field types of GraphQLList get a collection/map converter data fetcher by default
+				// this data fetcher can be overridden below if the user specifies a custom datafetcher
+				if (graphQLFieldType instanceof GraphQLList) {
+					if (Collection.class.isAssignableFrom(fieldTypeClass)) {
+						dataFetcher = new CollectionConverterDataFetcher(dataFetcher);
+					} else if (Map.class.isAssignableFrom(fieldTypeClass)) {
+						dataFetcher = new MapConverterDataFetcher(dataFetcher);
+					}
+				}
+
+				if (dataFetcher != null) {
+					builder.dataFetcher(dataFetcher);
 				}
 
 				return Optional.of(builder.build());
@@ -431,17 +442,27 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 				}
 				buildGenericArgumentTypeMap((ParameterizedType) type);
 			}
-			 while (classItem != null && classItem != Object.class) {
-				 fields.addAll(getGraphQLFieldDefinitions(type, classItem));
+			String classPackage = "";
 
-				 // pop currentContext
-				 classItem = classItem.getSuperclass();
+			if (classItem != null && classItem.getPackage() != null) {
+				classPackage = classItem.getPackage().getName();
+			}
+			// end when there are no more super classes and while ignore java.* types
+			while (classItem != null && !classPackage.startsWith("java.")) {
+				fields.addAll(getGraphQLFieldDefinitions(type, classItem));
 
-				 if (queryFactory.isPresent()) {
-					 fields.addAll(queryFactory.get().newMethodQueriesForObject(this, objectInstance));
-				 }
-			 }
+				// pop currentContext
+				classItem = classItem.getSuperclass();
+				if (classItem != null && classItem.getPackage() != null) {
+					classPackage = classItem.getPackage().getName();
+				} else {
+					classPackage = "";
+				}
 
+				if (queryFactory.isPresent()) {
+					fields.addAll(queryFactory.get().newMethodQueriesForObject(this, objectInstance));
+				}
+			}
 
 			// exiting context of current type arguments if we processed a generic type
 			if (type instanceof ParameterizedType) {
@@ -469,11 +490,13 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 		Set<String> ignoredFields = Sets.newHashSet();
 
 		for (Method m : classItem.getDeclaredMethods()) {
+			Optional<String> methodName = getFieldNameFromMethod(m);
+			// we only look at getters and is types
+			if (!methodName.isPresent()) {
+				continue;
+			}
 			if (null != m.getAnnotation(GraphQLIgnore.class)) {
-				Optional<String> methodName = getFieldNameFromMethod(m);
-				if (methodName.isPresent()) {
-					ignoredFields.add(methodName.get());
-				}
+				ignoredFields.add(methodName.get());
 				continue;
 			}
 			fieldDefinitionOptional = getFieldType(type, m);
@@ -484,7 +507,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 
 		for (Field field : classItem.getDeclaredFields()) {
 			// skip ignored fields
-			if (null != field.getAnnotation(GraphQLIgnore.class) || ignoredFields.contains(field.getName()) ) {
+			if (null != field.getAnnotation(GraphQLIgnore.class) || ignoredFields.contains(field.getName())) {
 				// if it's marked ignored then remove it.
 				if (fieldDefinitions.containsKey(field.getName())) {
 					fieldDefinitions.remove(field.getName());
@@ -504,7 +527,6 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 
 		return fieldDefinitions.values();
 	}
-
 
 	@Override
 	public ITypeNamingStrategy getTypeNamingStrategy() {
@@ -539,7 +561,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 		if (type instanceof ParameterizedType) {
 			return (Class) ((ParameterizedType) type).getRawType();
 		} else if (type instanceof TypeVariable) {
-			return  getClassFromType(typeArguments.peek().get(((TypeVariable) type).getName()));
+			return getClassFromType(typeArguments.peek().get(((TypeVariable) type).getName()));
 		} else if (type instanceof WildcardType) {
 			// @TODO do a better job of wild card types here
 			return getClassFromType(((WildcardType) type).getLowerBounds()[0]);

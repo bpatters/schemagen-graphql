@@ -7,8 +7,10 @@ import com.bretpatterson.schemagen.graphql.ITypeNamingStrategy;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLDataFetcher;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLIgnore;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
+import com.bretpatterson.schemagen.graphql.datafetchers.CollectionConverterDataFetcher;
 import com.bretpatterson.schemagen.graphql.datafetchers.DefaultMethodDataFetcher;
 import com.bretpatterson.schemagen.graphql.ITypeFactory;
+import com.bretpatterson.schemagen.graphql.datafetchers.IDataFetcher;
 import com.bretpatterson.schemagen.graphql.relay.RelayConnection;
 import com.bretpatterson.schemagen.graphql.typemappers.IGraphQLTypeMapper;
 import com.google.common.base.Optional;
@@ -56,6 +58,7 @@ public class GraphQLObjectMapperTest {
 				GraphQLSchemaBuilder.getDefaultTypeMappers(),
 				typeNamingStrategy,
 				Optional.<IDataFetcherFactory> absent(),
+				Optional.<Class<? extends IDataFetcher>> absent(),
 				ImmutableList.<Class> of());
 
 	}
@@ -65,6 +68,7 @@ public class GraphQLObjectMapperTest {
 				typeMappers,
 				Optional.<ITypeNamingStrategy> absent(),
 				Optional.<IDataFetcherFactory> absent(),
+				Optional.<Class<? extends IDataFetcher>> absent(),
 				ImmutableList.<Class> of());
 
 	}
@@ -75,6 +79,7 @@ public class GraphQLObjectMapperTest {
 				GraphQLSchemaBuilder.getDefaultTypeMappers(),
 				Optional.<ITypeNamingStrategy> of(new FullTypeNamingStrategy()),
 				Optional.<IDataFetcherFactory> absent(),
+				Optional.<Class<? extends IDataFetcher>> absent(),
 				ImmutableList.<Class> of());
 		assertTypeMapping(Scalars.GraphQLString.getName(), Scalars.GraphQLString, graphQLObjectMapper.getOutputType(String.class));
 		assertTypeMapping(Scalars.GraphQLInt.getName(), Scalars.GraphQLInt, graphQLObjectMapper.getOutputType(Integer.class));
@@ -324,13 +329,12 @@ public class GraphQLObjectMapperTest {
 		}.getType()));
 	}
 
-
 	public class MethodBasedFields {
+
 		@GraphQLIgnore
 		private Object ignoredObject;
 		private String stringField;
 		private List<String> stringList;
-
 
 		public String getStringField() {
 			return stringField;
@@ -348,9 +352,10 @@ public class GraphQLObjectMapperTest {
 	@Test
 	public void testMethodBasedFields() {
 		IGraphQLObjectMapper graphQLObjectMapper = newGraphQLObjectMapper(
-						ImmutableList.<IGraphQLTypeMapper> builder().add(new TestTypeMapper()).addAll(GraphQLSchemaBuilder.getDefaultTypeMappers()).build());
+				ImmutableList.<IGraphQLTypeMapper> builder().add(new TestTypeMapper()).addAll(GraphQLSchemaBuilder.getDefaultTypeMappers()).build());
 
-		GraphQLObjectType objectType = (GraphQLObjectType) graphQLObjectMapper.getOutputType(new TypeToken<MethodBasedFields>(){}.getType());
+		GraphQLObjectType objectType = (GraphQLObjectType) graphQLObjectMapper.getOutputType(new TypeToken<MethodBasedFields>() {
+		}.getType());
 
 		assertEquals(MethodBasedFields.class.getSimpleName(), objectType.getName());
 		assertEquals(2, objectType.getFieldDefinitions().size());
@@ -358,11 +363,58 @@ public class GraphQLObjectMapperTest {
 		assertEquals(Scalars.GraphQLString, objectType.getFieldDefinition("stringField").getType());
 		assertNotNull(objectType.getFieldDefinition("stringList"));
 		assertEquals(GraphQLList.class, objectType.getFieldDefinition("stringList").getType().getClass());
-		assertEquals(Scalars.GraphQLString, ((GraphQLList)objectType.getFieldDefinition("stringList").getType()).getWrappedType());
+		assertEquals(Scalars.GraphQLString, ((GraphQLList) objectType.getFieldDefinition("stringList").getType()).getWrappedType());
 		assertNull(objectType.getFieldDefinition("ignoredObject"));
 
 		assertEquals(DefaultMethodDataFetcher.class, objectType.getFieldDefinition("stringField").getDataFetcher().getClass());
-		assertEquals(DefaultMethodDataFetcher.class, objectType.getFieldDefinition("stringList").getDataFetcher().getClass());
+		assertEquals(CollectionConverterDataFetcher.class, objectType.getFieldDefinition("stringList").getDataFetcher().getClass());
 	}
 
+	public class MethodOnlyFields {
+
+		public String getStringField() {
+			return "";
+		}
+
+		public List<String> getStringList() {
+			return ImmutableList.of();
+		}
+
+		@GraphQLIgnore
+		public Object getIgnoredObject() {
+			return "";
+		}
+	}
+
+	@Test
+	public void testMethodOnlyFields() {
+		IGraphQLObjectMapper graphQLObjectMapper = newGraphQLObjectMapper(
+				ImmutableList.<IGraphQLTypeMapper> builder().add(new TestTypeMapper()).addAll(GraphQLSchemaBuilder.getDefaultTypeMappers()).build());
+
+		GraphQLObjectType objectType = (GraphQLObjectType) graphQLObjectMapper.getOutputType(new TypeToken<MethodOnlyFields>() {
+		}.getType());
+
+		assertEquals(MethodOnlyFields.class.getSimpleName(), objectType.getName());
+		assertEquals(2, objectType.getFieldDefinitions().size());
+		assertNotNull(objectType.getFieldDefinition("stringField"));
+		assertEquals(Scalars.GraphQLString, objectType.getFieldDefinition("stringField").getType());
+		assertNotNull(objectType.getFieldDefinition("stringList"));
+		assertEquals(GraphQLList.class, objectType.getFieldDefinition("stringList").getType().getClass());
+		assertEquals(Scalars.GraphQLString, ((GraphQLList) objectType.getFieldDefinition("stringList").getType()).getWrappedType());
+		assertNull(objectType.getFieldDefinition("ignoredObject"));
+
+		assertEquals(DefaultMethodDataFetcher.class, objectType.getFieldDefinition("stringField").getDataFetcher().getClass());
+		assertEquals(CollectionConverterDataFetcher.class, objectType.getFieldDefinition("stringList").getDataFetcher().getClass());
+	}
+
+	@Test
+	public void testEnumType() {
+		IGraphQLObjectMapper graphQLObjectMapper = newGraphQLObjectMapper(
+				ImmutableList.<IGraphQLTypeMapper> builder().add(new TestTypeMapper()).addAll(GraphQLSchemaBuilder.getDefaultTypeMappers()).build());
+
+		GraphQLOutputType outputType =  graphQLObjectMapper.getOutputType(new TypeToken<Enum>() {
+		}.getType());
+
+		assertEquals(Scalars.GraphQLString, outputType);
+	}
 }

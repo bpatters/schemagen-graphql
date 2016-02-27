@@ -4,6 +4,7 @@ import com.bretpatterson.schemagen.graphql.GraphQLSchemaBuilder;
 import com.bretpatterson.schemagen.graphql.IDataFetcherFactory;
 import com.bretpatterson.schemagen.graphql.ITypeNamingStrategy;
 import com.bretpatterson.schemagen.graphql.ITypeFactory;
+import com.bretpatterson.schemagen.graphql.datafetchers.IDataFetcher;
 import com.bretpatterson.schemagen.graphql.datafetchers.MapConverterDataFetcher;
 import com.bretpatterson.schemagen.graphql.typemappers.java.util.MapMapper;
 import com.google.common.base.Optional;
@@ -70,6 +71,7 @@ public class GraphQLObjectMapper_CollectionsTest {
 				GraphQLSchemaBuilder.getDefaultTypeMappers(),
 				Optional.<ITypeNamingStrategy>absent(),
 				Optional.<IDataFetcherFactory>absent(),
+				Optional.<Class<? extends IDataFetcher>>absent(),
 				ImmutableList.<Class> of());
 	}
 

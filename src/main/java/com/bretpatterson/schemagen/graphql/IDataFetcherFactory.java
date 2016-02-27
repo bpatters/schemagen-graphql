@@ -19,15 +19,18 @@ public interface IDataFetcherFactory {
 	 * @param dataFetcher
 	 * @return
 	 */
-	IDataFetcher newFieldDataFetcher(IGraphQLObjectMapper objectMapper, Field field, GraphQLDataFetcher dataFetcher);
+	IDataFetcher newFieldDataFetcher(IGraphQLObjectMapper objectMapper, Field field, Class<? extends IDataFetcher> dataFetcher);
 
 	/**
 	 * Factory for creating data fetchers for Method definitions annotated with {@link GraphQLDataFetcher}.
-	 * @param objectMapper the {@link IGraphQLObjectMapper}
-	 * @param field      the Field object itself
+	 *
+	 * @param objectMapper
+	 * @param targetObject
+	 * @param method
+	 * @param fieldName
 	 * @param dataFetcher
 	 * @return
 	 */
-	IDataFetcher newMethodDataFetcher(IGraphQLObjectMapper objectMapper, Object targetObject, Method method, String fieldName, Class dataFetcher);
+	IDataFetcher newMethodDataFetcher(IGraphQLObjectMapper objectMapper, Object targetObject, Method method, String fieldName, Class<? extends IDataFetcher> dataFetcher);
 
 }

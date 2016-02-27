@@ -89,7 +89,7 @@ public class DefaultMethodDataFetcher implements IMethodDataFetcher {
 		try {
 			return method.invoke(targetObject, (Object[]) arguments);
 		} catch (Exception ex) {
-			LOGGER.error("Unexpected exception ", ex);
+			LOGGER.error("Unexpected exception.", ex);
 			throw Throwables.propagate(ex);
 		}
 	}

@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
  * Fields annotated with this method will be ignored
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD})
+@Target({ElementType.FIELD, ElementType.METHOD})
 public @interface GraphQLIgnore {
 
 }

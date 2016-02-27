@@ -16,7 +16,15 @@ import java.security.InvalidParameterException;
  */
 public class DefaultDataFetcherFactory implements IDataFetcherFactory {
 	@Override
-	public IDataFetcher newFieldDataFetcher(final IGraphQLObjectMapper objectMapper, final Field field, final GraphQLDataFetcher dataFetcher) {
+	public IDataFetcher newFieldDataFetcher(final IGraphQLObjectMapper objectMapper, final Field field, Class<? extends IDataFetcher> dataFetcher) {
+		if (dataFetcher != null) {
+			try {
+				return dataFetcher.newInstance();
+			} catch (IllegalAccessException | InstantiationException ex) {
+				throw Throwables.propagate(ex);
+			}
+		}
+
 		return null;
 	}
 

@@ -2,6 +2,8 @@ package com.bretpatterson.schemagen.graphql;
 
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLController;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
+import com.bretpatterson.schemagen.graphql.datafetchers.DefaultMethodDataFetcher;
+import com.bretpatterson.schemagen.graphql.datafetchers.IDataFetcher;
 import com.bretpatterson.schemagen.graphql.impl.GraphQLObjectMapper;
 import com.bretpatterson.schemagen.graphql.relay.IRelayNodeFactory;
 import com.bretpatterson.schemagen.graphql.relay.annotations.RelayNodeFactory;
@@ -51,6 +53,7 @@ public class GraphQLSchemaBuilder {
 	private List<IGraphQLTypeMapper> typeMappers = new LinkedList<>();
 	private Optional<ITypeNamingStrategy> typeNamingStrategy = Optional.absent();
 	private Optional<IDataFetcherFactory> dataFetcherFactory = Optional.absent();
+	private Optional<Class<? extends IDataFetcher>> defaultMethodDataFetcher = Optional.absent();
 	private RelayDefaultNodeHandler.Builder relayDefaultNodeHandler = RelayDefaultNodeHandler.builder();
 	private List<Class> relayNodeTypes = Lists.newArrayList();
 	private ITypeFactory typeFactory;
@@ -148,6 +151,12 @@ public class GraphQLSchemaBuilder {
 		return this;
 	}
 
+	public GraphQLSchemaBuilder registerDefaultMethodDataFetcher(Class<? extends IDataFetcher> defaultMethodDataFetcher) {
+		this.defaultMethodDataFetcher = Optional.<Class<? extends IDataFetcher>>fromNullable(defaultMethodDataFetcher);
+
+		return this;
+	}
+
 	public GraphQLSchemaBuilder relayEnabled(boolean relayEnabled) {
 		this.relayEnabled = relayEnabled;
 
@@ -174,7 +183,7 @@ public class GraphQLSchemaBuilder {
 	public GraphQLSchema build() {
 
 		this.typeMappers.addAll(0, getDefaultTypeMappers());
-		this.setGraphQLObjectMapper(new GraphQLObjectMapper(typeFactory, typeMappers, typeNamingStrategy, dataFetcherFactory, relayNodeTypes));
+		this.setGraphQLObjectMapper(new GraphQLObjectMapper(typeFactory, typeMappers, typeNamingStrategy, dataFetcherFactory, defaultMethodDataFetcher,  relayNodeTypes));
 		// add our node handler first, as it's used by relay and we want people to be able to override it if they really want to
 		if (relayEnabled) {
 			graphQLControllers.add(0, relayDefaultNodeHandler.build());

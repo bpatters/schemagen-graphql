@@ -1,9 +1,12 @@
 package com.bretpatterson.schemagen.graphql.datafetchers;
 
+import java.lang.reflect.Type;
 import java.util.Map;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
+import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.PropertyDataFetcher;
 
@@ -11,15 +14,16 @@ import graphql.schema.PropertyDataFetcher;
  * This converts all Maps into a List of Entries who's key/values are accessible
  * This gets added to all Map's by default so they can be exposed through GraphQL
  */
-public class MapConverterDataFetcher extends PropertyDataFetcher {
+public class MapConverterDataFetcher implements IDataFetcher {
+	DataFetcher parentDataFetcher;
 
-	public MapConverterDataFetcher(String propertyName) {
-		super(propertyName);
+	public MapConverterDataFetcher(DataFetcher parentDataFetcher) {
+		this.parentDataFetcher = parentDataFetcher;
 	}
 
 	@Override
 	public Object get(DataFetchingEnvironment environment) {
-		Map rv = (Map) super.get(environment);
+		Map rv = (Map) parentDataFetcher.get(environment);
 
 		if (rv == null) {
 			return ImmutableList.of();
@@ -31,6 +35,13 @@ public class MapConverterDataFetcher extends PropertyDataFetcher {
 			rvList.add(new Entry(entry.getKey(), entry.getValue()));
 		}
 		return rvList.build();
+	}
+
+	@Override
+	public void addParam(final String name, final Type type, final Optional<Object> defaultValue) {
+		if (IDataFetcher.class.isAssignableFrom(parentDataFetcher.getClass())) {
+			((IDataFetcher)parentDataFetcher).addParam(name, type, defaultValue);
+		}
 	}
 
 	/**
