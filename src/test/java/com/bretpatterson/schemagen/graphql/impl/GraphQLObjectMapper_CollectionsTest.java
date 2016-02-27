@@ -355,7 +355,7 @@ public class GraphQLObjectMapper_CollectionsTest {
 				}.getType());
 		GraphQLObjectType outputType = (GraphQLObjectType) listType.getWrappedType();
 
-		assertEquals("Map_TestEnum_List", outputType.getName());
+		assertEquals("Map_TestEnum_List_List_List_List_List_List_String", outputType.getName());
 
 		GraphQLEnumType keyType = (GraphQLEnumType) outputType.getFieldDefinition(MapMapper.KEY_NAME).getType();
 		GraphQLType valueType = outputType.getFieldDefinition(MapMapper.VALUE_NAME).getType();

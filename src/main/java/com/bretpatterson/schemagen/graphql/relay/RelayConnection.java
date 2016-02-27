@@ -1,7 +1,5 @@
 package com.bretpatterson.schemagen.graphql.relay;
 
-import graphql.relay.PageInfo;
-
 import java.util.List;
 
 /**

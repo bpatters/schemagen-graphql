@@ -43,6 +43,9 @@ public class SimpleTypeNamingStrategy implements ITypeNamingStrategy {
 				parametersTypeString += "_";
 			}
 			parametersTypeString += graphQLObjectMapper.getClassFromType(subTypes[i]).getSimpleName();
+			if (subTypes[i] instanceof ParameterizedType) {
+				parametersTypeString += "_"+getParametersTypeString(graphQLObjectMapper, (ParameterizedType) subTypes[i]);
+			}
 		}
 
 		return parametersTypeString;

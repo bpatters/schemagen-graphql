@@ -6,6 +6,7 @@ import com.bretpatterson.schemagen.graphql.annotations.GraphQLParam;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLQuery;
 import com.bretpatterson.schemagen.graphql.relay.ConnectionCursor;
 import com.bretpatterson.schemagen.graphql.relay.Edge;
+import com.bretpatterson.schemagen.graphql.relay.PageInfo;
 import com.bretpatterson.schemagen.graphql.relay.RelayConnection;
 import com.bretpatterson.schemagen.graphql.relay.manager.GameManager;
 import com.bretpatterson.schemagen.graphql.relay.model.IGame;
@@ -27,7 +28,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import graphql.relay.PageInfo;
 
 import java.util.List;
 
