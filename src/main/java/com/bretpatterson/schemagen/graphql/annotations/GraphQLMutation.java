@@ -28,5 +28,5 @@ public @interface GraphQLMutation {
 	 * The Data Fetcher to use for this field. Defaults to {@link DefaultMethodDataFetcher}
 	 * @return
 	 */
-	Class<? extends IMethodDataFetcher> dataFetcher() default DefaultMethodDataFetcher.class;
+	Class dataFetcher() default AnnotationUtils.DEFAULT_NULL_CLASS.class;
 }

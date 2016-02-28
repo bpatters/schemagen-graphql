@@ -1,6 +1,7 @@
 package com.bretpatterson.schemagen.graphql;
 
 
+import com.bretpatterson.schemagen.graphql.datafetchers.IDataFetcher;
 import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLType;
@@ -75,4 +76,16 @@ public interface IGraphQLObjectMapper {
 	 * @param dataFetcherFactory
 	 */
 	void setDataFetcherFactory(IDataFetcherFactory dataFetcherFactory);
+
+	/**
+	 * Get the default datafetcher for methods
+	 * @return
+	 */
+	Class<? extends IDataFetcher> getDefaultMethodDataFetcher();
+
+	/**
+	 * Set the default data fetcher used for methods
+	 * @param defaultMethodDataFetcher
+	 */
+	void setDefaultMethodDataFetcher(Class<? extends IDataFetcher> defaultMethodDataFetcher);
 }

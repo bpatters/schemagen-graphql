@@ -51,11 +51,15 @@ public class DefaultQueryAndMutationFactory implements IQueryFactory, IMutationF
 
 		for (Map.Entry<GraphQLMutation, Method> entry : methodMap.entrySet()) {
 			try {
+				Class dataFetcher = entry.getKey().dataFetcher();
+				if (AnnotationUtils.isNullValue(dataFetcher)) {
+					dataFetcher = graphQLObjectMapper.getDefaultMethodDataFetcher();
+				}
 				GraphQLFieldDefinition newField = buildFieldDefinition(graphQLObjectMapper,
 						targetObject,
 						entry.getKey().name(),
 						entry.getValue(),
-						entry.getKey().dataFetcher());
+						dataFetcher);
 				results.add(newField);
 			} catch (Exception ex) {
 				Throwables.propagate(ex);
@@ -101,14 +105,18 @@ public class DefaultQueryAndMutationFactory implements IQueryFactory, IMutationF
 
 		for (Map.Entry<GraphQLQuery, Method> entry : methodMap.entrySet()) {
 			try {
+				Class dataFetcher = entry.getKey().dataFetcher();
+				if (AnnotationUtils.isNullValue(dataFetcher)) {
+					dataFetcher = graphQLObjectMapper.getDefaultMethodDataFetcher();
+				}
 				GraphQLFieldDefinition newField = buildFieldDefinition(graphQLObjectMapper,
 						targetObject,
 						entry.getKey().name(),
 						entry.getValue(),
-						entry.getKey().dataFetcher());
+						dataFetcher);
 				results.add(newField);
 			} catch (Exception ex) {
-				Throwables.propagate(ex);
+				throw Throwables.propagate(ex);
 			}
 		}
 

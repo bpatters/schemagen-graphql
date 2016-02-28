@@ -1,6 +1,8 @@
 package com.bretpatterson.schemagen.graphql.utils;
 
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLQuery;
+import com.bretpatterson.schemagen.graphql.datafetchers.DefaultMethodDataFetcher;
+import com.bretpatterson.schemagen.graphql.datafetchers.IDataFetcher;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -26,8 +28,7 @@ public class AnnotationUtils {
 	private static ClassLoader classLoader;
 	private static ClassPath classPath;
 
-	public static final class DEFAULT_NULL_CLASS {
-	};
+	public final static class DEFAULT_NULL_CLASS extends DefaultMethodDataFetcher {};
 
 	static {
 		try {

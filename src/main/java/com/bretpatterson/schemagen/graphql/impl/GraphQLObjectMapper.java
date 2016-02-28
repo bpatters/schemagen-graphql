@@ -84,7 +84,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 
 		this.typeFactory = typeFactory;
 		this.relayNodeTypes = relayNodeTypes;
-		this.defaultMethodDataFetcher = defaultMethodDataFetcher.or(DefaultMethodDataFetcher.class);
+		this.setDefaultMethodDataFetcher(defaultMethodDataFetcher.or(DefaultMethodDataFetcher.class));
 
 		if (typeNamingStrategy.isPresent()) {
 			this.typeNamingStrategy = typeNamingStrategy.get();
@@ -157,7 +157,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 		Class fieldTypeClass = getClassFromType(fieldType);
 		Optional<String> fieldName = getFieldNameFromMethod(method);
 		GraphQLOutputType graphQLFieldType = getOutputType(fieldType);
-		Class<? extends IDataFetcher> dataFetcherClass = defaultMethodDataFetcher;
+		Class<? extends IDataFetcher> dataFetcherClass = getDefaultMethodDataFetcher();
 
 		if (!fieldName.isPresent()) {
 			return Optional.absent();
@@ -580,5 +580,13 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 
 	public void setDataFetcherFactory(IDataFetcherFactory dataFetcherFactory) {
 		this.dataFetcherFactory = dataFetcherFactory;
+	}
+
+	public Class<? extends IDataFetcher> getDefaultMethodDataFetcher() {
+		return defaultMethodDataFetcher;
+	}
+
+	public void setDefaultMethodDataFetcher(Class<? extends IDataFetcher> defaultMethodDataFetcher) {
+		this.defaultMethodDataFetcher = defaultMethodDataFetcher;
 	}
 }
