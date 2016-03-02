@@ -23,13 +23,13 @@ import java.util.Map;
 public class DefaultMethodDataFetcher implements IMethodDataFetcher {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultMethodDataFetcher.class);
-	private ITypeFactory typeFactory;
+	protected ITypeFactory typeFactory;
 
-	private Method method;
-	private String fieldName;
-	private Object targetObject;
-	private LinkedHashMap<String, Type> argumentTypeMap = new LinkedHashMap<>();
-	private Map<String, Object> parameterDefaultValue = Maps.newHashMap();
+	protected Method method;
+	protected String fieldName;
+	protected Object targetObject;
+	protected LinkedHashMap<String, Type> argumentTypeMap = new LinkedHashMap<>();
+	protected Map<String, Object> parameterDefaultValue = Maps.newHashMap();
 
 	@Override
 	public void setTargetObject(Object targetObject) {
@@ -78,14 +78,15 @@ public class DefaultMethodDataFetcher implements IMethodDataFetcher {
 					arguments[index] = getParamValue(environment, argumentName, argumentTypeMap.get(argumentName));
 					index++;
 				}
-				return invokeMethod(method, targetObject != null ? targetObject : environment.getSource(), arguments);
+				return invokeMethod(environment, method, targetObject != null ? targetObject : environment.getSource(), arguments);
 			}
 		}
 		return null;
 
 	}
 
-	public Object invokeMethod(Method method, Object targetObject, Object[] arguments) {
+	@Override
+	public Object invokeMethod(DataFetchingEnvironment environment, Method method, Object targetObject, Object[] arguments) {
 		try {
 			return method.invoke(targetObject, (Object[]) arguments);
 		} catch (Exception ex) {
@@ -94,14 +95,17 @@ public class DefaultMethodDataFetcher implements IMethodDataFetcher {
 		}
 	}
 
+	@Override
 	public void setFieldName(String fieldName) {
 		this.fieldName = fieldName;
 	}
 
+	@Override
 	public void setMethod(Method method) {
 		this.method = method;
 	}
 
+	@Override
 	public void setTypeFactory(ITypeFactory typeFactory) {
 		this.typeFactory = typeFactory;
 	}

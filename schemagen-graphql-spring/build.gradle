@@ -1,14 +1,21 @@
+ext {
+    springVersion = '4.2.2.RELEASE'
+}
 dependencies {
     compile(project(':')) {
         transitive = true
     }
-    testCompile "junit:junit:version:${junitVersion}"
+    compile "org.springframework:spring-core:${springVersion}"
+    compile "org.springframework:spring-context:${springVersion}"
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "org.springframework:spring-test:${springVersion}"
+    testCompile "org.mockito:mockito-all:${mockitoVersion}"
 }
 
 
 publishing {
     publications {
-        schemagenGraphQLGuava(MavenPublication) {
+        schemagenGraphQLSpring(MavenPublication) {
             version version
             from components.java
 
@@ -52,12 +59,12 @@ publishing {
 bintray {
     user = System.env.BINTRAY_USER ?: project["bintray.user"]
     key = System.env.BINTRAY_API_KEY ?: project["bintray.key"]
-    publications = ['schemagenGraphQLGuava']
+    publications = ['schemagenGraphQLSpring']
     publish = true
     pkg {
         repo = 'schemagen-graphql'
-        name = 'schemagen-graphql-guava'
-        desc = 'Guava support for GraphQL Schema generation in Java'
+        name = 'schemagen-graphql-spring'
+        desc = 'Spring Datafetchers for GraphQL'
         licenses = ['MIT']
         vcsUrl = 'https://github.com/bpatters/schemagen-graphql'
     }

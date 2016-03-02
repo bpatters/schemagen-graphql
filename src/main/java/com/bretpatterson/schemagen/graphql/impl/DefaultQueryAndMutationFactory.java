@@ -35,15 +35,6 @@ public class DefaultQueryAndMutationFactory implements IQueryFactory, IMutationF
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultQueryAndMutationFactory.class);
 
-	protected <T> T findAnnotation(Annotation[] annotations, Class<T> type) {
-		for (Annotation annotation : annotations) {
-			if (annotation.annotationType() == type) {
-				return (T) annotation;
-			}
-		}
-		return null;
-	}
-
 	public List<GraphQLFieldDefinition> newMethodMutationsForObject(IGraphQLObjectMapper graphQLObjectMapper,
 			Object targetObject) {
 		ImmutableList.Builder<GraphQLFieldDefinition> results = ImmutableList.builder();
@@ -146,7 +137,7 @@ public class DefaultQueryAndMutationFactory implements IQueryFactory, IMutationF
 		Annotation[][] parameterAnnotations = method.getParameterAnnotations();
 		int index = 0;
 		for (Type paramType : method.getGenericParameterTypes()) {
-			GraphQLParam graphQLParam = findAnnotation(parameterAnnotations[index], GraphQLParam.class);
+			GraphQLParam graphQLParam = AnnotationUtils.findAnnotation(parameterAnnotations[index], GraphQLParam.class);
 
 			if (graphQLParam == null) {
 				LOGGER.error("Missing @GraphParam annotation on parameter index {} for method {}", index, method.getName());

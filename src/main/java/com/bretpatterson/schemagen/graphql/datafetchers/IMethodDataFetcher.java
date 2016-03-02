@@ -2,6 +2,7 @@ package com.bretpatterson.schemagen.graphql.datafetchers;
 
 import com.bretpatterson.schemagen.graphql.ITypeFactory;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLQuery;
+import graphql.schema.DataFetchingEnvironment;
 
 import java.lang.reflect.Method;
 
@@ -47,5 +48,5 @@ public interface IMethodDataFetcher extends IDataFetcher {
 	 * @param arguments the arguments to the method
 	 * @return return value
 	 */
-	Object invokeMethod(Method method, Object targetObject, Object[] arguments);
+	Object invokeMethod(DataFetchingEnvironment environment, Method method, Object targetObject, Object[] arguments);
 }

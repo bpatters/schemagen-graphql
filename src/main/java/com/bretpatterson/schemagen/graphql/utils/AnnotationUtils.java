@@ -38,6 +38,14 @@ public class AnnotationUtils {
 			Throwables.propagate(ex);
 		}
 	}
+	public static <T> T findAnnotation(Annotation[] annotations, Class<T> type) {
+		for (Annotation annotation : annotations) {
+			if (annotation.annotationType() == type) {
+				return (T) annotation;
+			}
+		}
+		return null;
+	}
 
 	public static <T extends Annotation> Map<Class, T> getClassesWithAnnotation(Class<T> annotation, String packageName) {
 		ImmutableMap.Builder<Class, T> results = ImmutableMap.builder();

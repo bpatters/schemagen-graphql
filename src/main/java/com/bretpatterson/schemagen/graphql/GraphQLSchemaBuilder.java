@@ -5,6 +5,7 @@ import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
 import com.bretpatterson.schemagen.graphql.datafetchers.DefaultMethodDataFetcher;
 import com.bretpatterson.schemagen.graphql.datafetchers.IDataFetcher;
 import com.bretpatterson.schemagen.graphql.impl.GraphQLObjectMapper;
+import com.bretpatterson.schemagen.graphql.impl.SimpleTypeFactory;
 import com.bretpatterson.schemagen.graphql.relay.IRelayNodeFactory;
 import com.bretpatterson.schemagen.graphql.relay.annotations.RelayNodeFactory;
 import com.bretpatterson.schemagen.graphql.relay.impl.RelayDefaultNodeHandler;
@@ -56,7 +57,7 @@ public class GraphQLSchemaBuilder {
 	private Optional<Class<? extends IDataFetcher>> defaultMethodDataFetcher = Optional.absent();
 	private RelayDefaultNodeHandler.Builder relayDefaultNodeHandler = RelayDefaultNodeHandler.builder();
 	private List<Class> relayNodeTypes = Lists.newArrayList();
-	private ITypeFactory typeFactory;
+	private ITypeFactory typeFactory = new SimpleTypeFactory();
 	private ClassLoader classLoader;
 	private ClassPath classPath;
 	private boolean relayEnabled = false;

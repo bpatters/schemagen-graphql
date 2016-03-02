@@ -21,6 +21,8 @@ allprojects {
         jacksonVersion = "2.5.1";
         graphQLJavaVersion = "2.0.0";
         jacocoReportsDir = "$buildDir/reports/jacoco"
+        junitVersion = "4.12"
+        mockitoVersion = "1.9.5"
     }
 
     version = releaseVersion ? releaseVersion : new SimpleDateFormat('yyyy-MM-dd\'T\'HH-mm-ss').format(new Date())
@@ -144,8 +146,8 @@ dependencies {
     compile 'org.slf4j:slf4j-api:1.7.12'
     compile 'com.google.guava:guava:19.0'
 
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    testCompile 'org.mockito:mockito-all:1.9.5'
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "org.mockito:mockito-all:${mockitoVersion}"
     testCompile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
     testCompile("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
 }
