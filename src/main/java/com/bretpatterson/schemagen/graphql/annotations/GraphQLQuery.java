@@ -25,10 +25,4 @@ public @interface GraphQLQuery {
 	 * @return
 	 */
 	String name() default AnnotationUtils.DEFAULT_NULL;
-
-	/**
-	 * The data fetcher to use for this field. Defaults to {@link DefaultMethodDataFetcher}
-	 * @return
-	 */
-	Class dataFetcher() default AnnotationUtils.DEFAULT_NULL_CLASS.class;
 }

@@ -1,6 +1,8 @@
 package com.bretpatterson.schemagen.graphql.annotations;
 
 
+import graphql.schema.DataFetcher;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -18,5 +20,5 @@ public @interface GraphQLDataFetcher {
 	 * A custom datafetcher you would like to use for this field
 	 * @return
 	 */
-	Class dataFetcher();
+	Class<? extends DataFetcher> dataFetcher();
 }

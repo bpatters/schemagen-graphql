@@ -1,6 +1,6 @@
 package com.bretpatterson.schemagen.graphql.relay.controller;
 
-import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeName;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLName;
 import com.bretpatterson.schemagen.graphql.relay.INode;
 
 import java.util.List;
@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * Created by bpatterson on 1/30/16.
  */
-@GraphQLTypeName(name="Game")
+@GraphQLName(name="Game")
 public class GameDTO implements INode {
 	private String id;
 	private String name;

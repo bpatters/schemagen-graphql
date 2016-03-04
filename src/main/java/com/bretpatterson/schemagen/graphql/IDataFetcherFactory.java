@@ -2,6 +2,8 @@ package com.bretpatterson.schemagen.graphql;
 
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLDataFetcher;
 import com.bretpatterson.schemagen.graphql.datafetchers.IDataFetcher;
+import com.google.common.base.Optional;
+import graphql.schema.DataFetcher;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -19,7 +21,7 @@ public interface IDataFetcherFactory {
 	 * @param dataFetcher
 	 * @return
 	 */
-	IDataFetcher newFieldDataFetcher(IGraphQLObjectMapper objectMapper, Field field, Class<? extends IDataFetcher> dataFetcher);
+	DataFetcher newFieldDataFetcher(IGraphQLObjectMapper objectMapper, Optional<Object> targetObject, Field field, String fieldName, Class<? extends DataFetcher> dataFetcher);
 
 	/**
 	 * Factory for creating data fetchers for Method definitions annotated with {@link GraphQLDataFetcher}.
@@ -31,6 +33,6 @@ public interface IDataFetcherFactory {
 	 * @param dataFetcher
 	 * @return
 	 */
-	IDataFetcher newMethodDataFetcher(IGraphQLObjectMapper objectMapper, Object targetObject, Method method, String fieldName, Class<? extends IDataFetcher> dataFetcher);
+	DataFetcher newMethodDataFetcher(IGraphQLObjectMapper objectMapper, Optional<Object> targetObject, Method method, String fieldName, Class<? extends DataFetcher> dataFetcher);
 
 }

@@ -6,14 +6,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Classes annotated with this method are scanned for methods defined as queryable.
+ * Used to set the name for an Object or Field.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE})
-public @interface GraphQLTypeName {
+@Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD})
+public @interface GraphQLName {
 
 	/**
-	 * The GraphQL TypeName you wish to use for the class this annotation is on
+	 * the name of the object or field
 	 * @return
 	 */
 	String name();

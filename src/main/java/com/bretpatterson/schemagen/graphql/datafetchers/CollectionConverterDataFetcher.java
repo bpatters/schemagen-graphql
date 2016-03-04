@@ -12,17 +12,15 @@ import java.util.Collection;
 /**
  * This converts any Collection object to a ImmutableList of the objects. Additionally this converts a null value to an empty list.
  */
-public class CollectionConverterDataFetcher implements IDataFetcher {
+public class CollectionConverterDataFetcher extends DefaultTypeConverter {
 
-	DataFetcher parentDataFetcher;
-
-	public CollectionConverterDataFetcher(DataFetcher parentDataFetcher) {
-		this.parentDataFetcher = parentDataFetcher;
+	public CollectionConverterDataFetcher(DataFetcher dataFetcher) {
+		super(dataFetcher);
 	}
 
 	@Override
-	public Object get(DataFetchingEnvironment environment) {
-		Collection rv = (Collection) parentDataFetcher.get(environment);
+	public Object convert(Object value) {
+		Collection rv = (Collection) value;
 
 		if (rv == null) {
 			return ImmutableList.of();
@@ -31,10 +29,4 @@ public class CollectionConverterDataFetcher implements IDataFetcher {
 		return ImmutableList.copyOf(rv);
 	}
 
-	@Override
-	public void addParam(final String name, final Type type, final Optional<Object> defaultValue) {
-		if (IDataFetcher.class.isAssignableFrom(parentDataFetcher.getClass())) {
-			((IDataFetcher) parentDataFetcher).addParam(name, type, defaultValue);
-		}
-	}
 }

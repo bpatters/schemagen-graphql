@@ -1,6 +1,7 @@
 package com.bretpatterson.schemagen.graphql.relay.impl;
 
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLController;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLName;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLParam;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLQuery;
 import com.bretpatterson.schemagen.graphql.relay.INode;
@@ -23,7 +24,8 @@ public class RelayDefaultNodeHandler implements IRelayNodeHandler {
 		this.nodeFactories = nodeFactories;
 	}
 
-	@GraphQLQuery(name="node")
+	@GraphQLQuery
+	@GraphQLName(name="node")
 	public INode findNodeById(@GraphQLParam(name="id") String nodeId) {
 
 		for (IRelayNodeFactory factory : nodeFactories) {

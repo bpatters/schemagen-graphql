@@ -72,6 +72,7 @@ public class GraphQLObjectMapper_CollectionsTest {
 				Optional.<ITypeNamingStrategy>absent(),
 				Optional.<IDataFetcherFactory>absent(),
 				Optional.<Class<? extends IDataFetcher>>absent(),
+				GraphQLSchemaBuilder.getDefaultTypeConverters(),
 				ImmutableList.<Class> of());
 	}
 

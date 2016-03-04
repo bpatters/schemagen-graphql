@@ -27,13 +27,13 @@ public class DefaultMethodDataFetcher implements IMethodDataFetcher {
 
 	protected Method method;
 	protected String fieldName;
-	protected Object targetObject;
+	protected Optional<Object> targetObject = Optional.absent();
 	protected LinkedHashMap<String, Type> argumentTypeMap = new LinkedHashMap<>();
 	protected Map<String, Object> parameterDefaultValue = Maps.newHashMap();
 
 	@Override
 	public void setTargetObject(Object targetObject) {
-		this.targetObject = targetObject;
+		this.targetObject = Optional.fromNullable(targetObject);
 	}
 
 	@Override
@@ -78,7 +78,7 @@ public class DefaultMethodDataFetcher implements IMethodDataFetcher {
 					arguments[index] = getParamValue(environment, argumentName, argumentTypeMap.get(argumentName));
 					index++;
 				}
-				return invokeMethod(environment, method, targetObject != null ? targetObject : environment.getSource(), arguments);
+				return invokeMethod(environment, method, targetObject.isPresent() ? targetObject.get() : environment.getSource(), arguments);
 			}
 		}
 		return null;
@@ -86,9 +86,9 @@ public class DefaultMethodDataFetcher implements IMethodDataFetcher {
 	}
 
 	@Override
-	public Object invokeMethod(DataFetchingEnvironment environment, Method method, Object targetObject, Object[] arguments) {
+	public Object invokeMethod(DataFetchingEnvironment environment, Method method, Object target, Object[] arguments) {
 		try {
-			return method.invoke(targetObject, (Object[]) arguments);
+			return method.invoke(target, (Object[]) arguments);
 		} catch (Exception ex) {
 			LOGGER.error("Unexpected exception.", ex);
 			throw Throwables.propagate(ex);

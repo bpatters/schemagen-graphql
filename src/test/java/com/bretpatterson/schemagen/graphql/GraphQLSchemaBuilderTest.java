@@ -4,13 +4,16 @@ import com.bretpatterson.schemagen.graphql.annotations.GraphQLController;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLMutation;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLParam;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLQuery;
-import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeName;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeConverter;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLName;
+import com.bretpatterson.schemagen.graphql.datafetchers.DefaultTypeConverter;
 import com.bretpatterson.schemagen.graphql.impl.common.JacksonTypeFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.Scalars;
+import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLInputObjectType;
 import graphql.schema.GraphQLObjectType;
@@ -27,7 +30,7 @@ import static org.junit.Assert.assertNotNull;
  */
 public class GraphQLSchemaBuilderTest {
 
-	@GraphQLTypeName(name = "RenamedTestInputType")
+	@GraphQLName(name = "RenamedTestInputType")
 	private class RenameMe {
 
 	}
@@ -54,14 +57,14 @@ public class GraphQLSchemaBuilderTest {
 			return "";
 		}
 
-		@GraphQLMutation(name = "name")
+		@GraphQLMutation
 		public String setName(@GraphQLParam(name = "name") String name) {
 			this.name = name;
 
 			return this.name;
 		}
 
-		@GraphQLQuery(name = "name")
+		@GraphQLQuery
 		public String getName() {
 			return name;
 		}
@@ -95,19 +98,19 @@ public class GraphQLSchemaBuilderTest {
 				.registerGraphQLControllerObjects(ImmutableList.<Object> of(new TestController()))
 				.build();
 
-		GraphQLFieldDefinition mutationType = schema.getMutationType().getFieldDefinition("name");
-		assertEquals("name", mutationType.getName());
+		GraphQLFieldDefinition mutationType = schema.getMutationType().getFieldDefinition("setName");
+		assertEquals("setName", mutationType.getName());
 		assertEquals(Scalars.GraphQLString, mutationType.getArgument("name").getType());
 
-		ExecutionResult result = new GraphQL(schema).execute("mutation M { name(name: \"The new name\") }");
+		ExecutionResult result = new GraphQL(schema).execute("mutation M { setName(name: \"The new name\") }");
 
-		String newName = (String) ((Map) result.getData()).get("name");
+		String newName = (String) ((Map) result.getData()).get("setName");
 		assertEquals(0, result.getErrors().size());
 		assertEquals("The new name", newName);
 
-		result = new GraphQL(schema).execute("query Q { name }");
+		result = new GraphQL(schema).execute("query Q { getName }");
 
-		newName = (String) ((Map) result.getData()).get("name");
+		newName = (String) ((Map) result.getData()).get("getName");
 		assertEquals(0, result.getErrors().size());
 		assertEquals("The new name", newName);
 	}
@@ -154,5 +157,38 @@ public class GraphQLSchemaBuilderTest {
 		assertNotNull(mutationField);
 		assertNotNull(mutationField.getArgument("param1"));
 		assertEquals(Scalars.GraphQLString, mutationField.getArgument("param1").getType());
+	}
+
+	public static class AppendingTypeconverter extends DefaultTypeConverter {
+
+		public AppendingTypeconverter(DataFetcher datafetcher) {
+			super(datafetcher);
+		}
+
+		@Override
+		public Object convert(Object value) {
+			return "prepend:" + value.toString();
+		}
+	}
+
+	@GraphQLController
+	public class TypeConverterTest {
+
+		@GraphQLTypeConverter(typeConverter = AppendingTypeconverter.class)
+		@GraphQLQuery(name="someStrings")
+		public String getSomeStrings() {
+			return "1";
+		}
+
+	}
+
+	@Test
+	public void testTypeConverterDetection() {
+		GraphQLSchema schema = GraphQLSchemaBuilder.newBuilder()
+				.registerTypeFactory(new JacksonTypeFactory(new ObjectMapper()))
+				.registerGraphQLControllerObjects(ImmutableList.<Object> of(new TypeConverterTest()))
+				.build();
+
+		assertEquals("prepend:1", ((Map)new GraphQL(schema).execute("{ someStrings }").getData()).get("someStrings"));
 	}
 }

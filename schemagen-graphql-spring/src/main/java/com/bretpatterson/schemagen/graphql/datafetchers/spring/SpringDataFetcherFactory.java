@@ -4,7 +4,9 @@ import com.bretpatterson.schemagen.graphql.IGraphQLObjectMapper;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLSpringELDataFetcher;
 import com.bretpatterson.schemagen.graphql.datafetchers.IDataFetcher;
 import com.bretpatterson.schemagen.graphql.impl.DefaultDataFetcherFactory;
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import graphql.schema.DataFetcher;
 import org.springframework.beans.factory.access.el.SpringBeanELResolver;
 import org.springframework.context.ApplicationContext;
 
@@ -27,7 +29,7 @@ public class SpringDataFetcherFactory extends DefaultDataFetcherFactory {
 	}
 
 	@Override
-	public IDataFetcher newFieldDataFetcher(final IGraphQLObjectMapper graphQLObjectMapper, final Field field, Class<? extends IDataFetcher> dataFetcher) {
+	public DataFetcher newFieldDataFetcher(final IGraphQLObjectMapper graphQLObjectMapper, final Optional<Object> targetObject, final Field field, final String fieldName, Class<? extends DataFetcher> dataFetcher) {
 
 		SpringDataFetcher dataFetcherObject = null;
 		try {
@@ -46,15 +48,15 @@ public class SpringDataFetcherFactory extends DefaultDataFetcherFactory {
 			throw Throwables.propagate(ex);
 		}
 
-		return super.newFieldDataFetcher(graphQLObjectMapper, field, dataFetcher);
+		return super.newFieldDataFetcher(graphQLObjectMapper, targetObject, field, fieldName, dataFetcher);
 	}
 
 	@Override
-	public IDataFetcher newMethodDataFetcher(final IGraphQLObjectMapper graphQLObjectMapper,
-			final Object targetObject,
+	public DataFetcher newMethodDataFetcher(final IGraphQLObjectMapper graphQLObjectMapper,
+			final Optional<Object> targetObject,
 			final Method method,
 			final String fieldName,
-			final Class dataFetcher) {
+			final Class<? extends DataFetcher> dataFetcher) {
 		checkNotNull(method);
 		SpringDataFetcher dataFetcherObject = null;
 		try {
@@ -67,7 +69,6 @@ public class SpringDataFetcherFactory extends DefaultDataFetcherFactory {
 				dataFetcherObject.setMethod(method);
 				dataFetcherObject.setExpression(springDataFetcher.value());
 				dataFetcherObject.setApplicationContext(context);
-				processMethodArguments(dataFetcherObject, method);
 				return dataFetcherObject;
 			}
 		} catch (Exception ex) {

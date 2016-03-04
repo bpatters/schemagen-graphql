@@ -2,11 +2,16 @@ package com.bretpatterson.schemagen.graphql;
 
 
 import com.bretpatterson.schemagen.graphql.datafetchers.IDataFetcher;
+import com.google.common.base.Optional;
+import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLType;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -88,4 +93,6 @@ public interface IGraphQLObjectMapper {
 	 * @param defaultMethodDataFetcher
 	 */
 	void setDefaultMethodDataFetcher(Class<? extends IDataFetcher> defaultMethodDataFetcher);
+
+	Collection<GraphQLFieldDefinition> getGraphQLFieldDefinitions(Optional<Object> targetObject, Type type, Class classItem);
 }

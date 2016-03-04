@@ -6,17 +6,22 @@ import com.bretpatterson.schemagen.graphql.IGraphQLObjectMapper;
 import com.bretpatterson.schemagen.graphql.ITypeNamingStrategy;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLDataFetcher;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLIgnore;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLQuery;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeConverter;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
 import com.bretpatterson.schemagen.graphql.datafetchers.CollectionConverterDataFetcher;
 import com.bretpatterson.schemagen.graphql.datafetchers.DefaultMethodDataFetcher;
 import com.bretpatterson.schemagen.graphql.ITypeFactory;
+import com.bretpatterson.schemagen.graphql.datafetchers.DefaultTypeConverter;
 import com.bretpatterson.schemagen.graphql.datafetchers.IDataFetcher;
 import com.bretpatterson.schemagen.graphql.relay.RelayConnection;
 import com.bretpatterson.schemagen.graphql.typemappers.IGraphQLTypeMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
 import graphql.Scalars;
+import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLList;
@@ -27,6 +32,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -59,6 +65,7 @@ public class GraphQLObjectMapperTest {
 				typeNamingStrategy,
 				Optional.<IDataFetcherFactory> absent(),
 				Optional.<Class<? extends IDataFetcher>> absent(),
+				GraphQLSchemaBuilder.getDefaultTypeConverters(),
 				ImmutableList.<Class> of());
 
 	}
@@ -69,6 +76,7 @@ public class GraphQLObjectMapperTest {
 				Optional.<ITypeNamingStrategy> absent(),
 				Optional.<IDataFetcherFactory> absent(),
 				Optional.<Class<? extends IDataFetcher>> absent(),
+				GraphQLSchemaBuilder.getDefaultTypeConverters(),
 				ImmutableList.<Class> of());
 
 	}
@@ -80,6 +88,7 @@ public class GraphQLObjectMapperTest {
 				Optional.<ITypeNamingStrategy> of(new FullTypeNamingStrategy()),
 				Optional.<IDataFetcherFactory> absent(),
 				Optional.<Class<? extends IDataFetcher>> absent(),
+				GraphQLSchemaBuilder.getDefaultTypeConverters(),
 				ImmutableList.<Class> of());
 		assertTypeMapping(Scalars.GraphQLString.getName(), Scalars.GraphQLString, graphQLObjectMapper.getOutputType(String.class));
 		assertTypeMapping(Scalars.GraphQLInt.getName(), Scalars.GraphQLInt, graphQLObjectMapper.getOutputType(Integer.class));
@@ -279,7 +288,6 @@ public class GraphQLObjectMapperTest {
 		GraphQLObjectType objectType = (GraphQLObjectType) graphQLObjectMapper.getOutputType(TestType.class);
 
 		assertNotNull(objectType.getFieldDefinition("myfield"));
-		assertEquals(DefaultMethodDataFetcher.class, objectType.getFieldDefinition("myfield").getDataFetcher().getClass());
 
 	}
 
@@ -416,5 +424,33 @@ public class GraphQLObjectMapperTest {
 		}.getType());
 
 		assertEquals(Scalars.GraphQLString, outputType);
+	}
+
+
+
+	public static class AppendingTypeconverter extends DefaultTypeConverter {
+		public AppendingTypeconverter(DataFetcher datafetcher) {
+			super(datafetcher);
+		}
+		public Object convert(Object value) {
+			return "prepend:"+value.toString();
+		}
+	}
+
+	public class TypeConverterTest {
+		@GraphQLTypeConverter(typeConverter = AppendingTypeconverter.class)
+		String getSomeStrings() {
+			return "1";
+		}
+
+	}
+
+	@Test
+	public void testTypeConverterDetection() {
+
+		IGraphQLObjectMapper graphQLObjectMapper = newGraphQLObjectMapper(
+				ImmutableList.<IGraphQLTypeMapper> builder().add(new TestTypeMapper()).addAll(GraphQLSchemaBuilder.getDefaultTypeMappers()).build());
+		GraphQLObjectType objectType = (GraphQLObjectType) graphQLObjectMapper.getOutputType(new TypeToken<TypeConverterTest>(){}.getType());
+		assertEquals(AppendingTypeconverter.class, objectType.getFieldDefinition("someStrings").getDataFetcher().getClass());
 	}
 }

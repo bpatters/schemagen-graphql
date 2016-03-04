@@ -11,6 +11,7 @@ import com.bretpatterson.schemagen.graphql.utils.AnnotationUtils;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLOutputType;
@@ -35,52 +36,12 @@ public class DefaultQueryAndMutationFactory implements IQueryFactory, IMutationF
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultQueryAndMutationFactory.class);
 
-	public List<GraphQLFieldDefinition> newMethodMutationsForObject(IGraphQLObjectMapper graphQLObjectMapper,
-			Object targetObject) {
-		ImmutableList.Builder<GraphQLFieldDefinition> results = ImmutableList.builder();
-		Map<GraphQLMutation, Method> methodMap = AnnotationUtils.getMethodsWithAnnotation(targetObject.getClass(), GraphQLMutation.class);
+	public List<GraphQLFieldDefinition> newMethodMutationsForObject(IGraphQLObjectMapper graphQLObjectMapper, Object targetObject) {
+		List<GraphQLFieldDefinition> results = Lists.newLinkedList();
 
-		for (Map.Entry<GraphQLMutation, Method> entry : methodMap.entrySet()) {
-			try {
-				Class dataFetcher = entry.getKey().dataFetcher();
-				if (AnnotationUtils.isNullValue(dataFetcher)) {
-					dataFetcher = graphQLObjectMapper.getDefaultMethodDataFetcher();
-				}
-				GraphQLFieldDefinition newField = buildFieldDefinition(graphQLObjectMapper,
-						targetObject,
-						entry.getKey().name(),
-						entry.getValue(),
-						dataFetcher);
-				results.add(newField);
-			} catch (Exception ex) {
-				Throwables.propagate(ex);
-			}
-		}
+		results.addAll(graphQLObjectMapper.getGraphQLFieldDefinitions(Optional.of(targetObject), targetObject.getClass(), targetObject.getClass()));
 
-		return results.build();
-	}
-
-	private GraphQLFieldDefinition buildFieldDefinition(IGraphQLObjectMapper graphQLObjectMapper,
-			Object targetObject,
-			String name,
-			Method method,
-			Class dataFetcherClass) {
-		IDataFetcher dataFetcher = graphQLObjectMapper.getDataFetcherFactory().newMethodDataFetcher(graphQLObjectMapper,
-																									targetObject,
-																									method,
-																									name,
-																									dataFetcherClass);
-
-		GraphQLFieldDefinition.Builder newField = GraphQLFieldDefinition.newFieldDefinition().name(name);
-		newField.type(getReturnType(graphQLObjectMapper, method));
-		if (dataFetcher !=null) {
-			newField.dataFetcher(dataFetcher);
-		}
-		List<GraphQLArgument> arguments = getMethodArguments(graphQLObjectMapper, Optional.fromNullable(dataFetcher), method);
-
-		newField.argument(arguments);
-
-		return newField.build();
+		return results;
 	}
 
 	/**
@@ -91,71 +52,16 @@ public class DefaultQueryAndMutationFactory implements IQueryFactory, IMutationF
 	 * @return
 	 */
 	public List<GraphQLFieldDefinition> newMethodQueriesForObject(IGraphQLObjectMapper graphQLObjectMapper, Object targetObject) {
-		ImmutableList.Builder<GraphQLFieldDefinition> results = ImmutableList.builder();
-		Map<GraphQLQuery, Method> methodMap = AnnotationUtils.getMethodsWithAnnotation(targetObject.getClass(), GraphQLQuery.class);
+		List<GraphQLFieldDefinition> results = Lists.newLinkedList();
 
-		for (Map.Entry<GraphQLQuery, Method> entry : methodMap.entrySet()) {
-			try {
-				Class dataFetcher = entry.getKey().dataFetcher();
-				if (AnnotationUtils.isNullValue(dataFetcher)) {
-					dataFetcher = graphQLObjectMapper.getDefaultMethodDataFetcher();
-				}
-				GraphQLFieldDefinition newField = buildFieldDefinition(graphQLObjectMapper,
-						targetObject,
-						entry.getKey().name(),
-						entry.getValue(),
-						dataFetcher);
-				results.add(newField);
-			} catch (Exception ex) {
-				throw Throwables.propagate(ex);
-			}
-		}
+		results.addAll(graphQLObjectMapper.getGraphQLFieldDefinitions(Optional.of(targetObject), targetObject.getClass(), targetObject.getClass()));
 
-		return results.build();
+		return results;
 	}
 
 	protected GraphQLOutputType getReturnType(IGraphQLObjectMapper graphQLObjectMapper, Method method) {
 		return graphQLObjectMapper.getOutputType(method.getGenericReturnType());
 	}
 
-	/**
-	 * Generates a list of GraphQLArgument objects for the specified method while passing parameter information to the datafetcher for use
-	 * during fetching.
-	 * 
-	 * @param graphQLObjectMapper the graphQLObject mapper
-	 * @param dataFetcher The Data fetcher that will be used for this method.
-	 * @param method
-	 * @return
-	 * @throws Exception
-	 */
-	protected List<GraphQLArgument> getMethodArguments(IGraphQLObjectMapper graphQLObjectMapper, Optional<IDataFetcher> dataFetcher, Method method) {
-
-		Type returnType = method.getGenericReturnType();
-
-		ImmutableList.Builder<GraphQLArgument> argumentBuilder = ImmutableList.builder();
-		GraphQLArgument.Builder paramBuilder;
-		Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-		int index = 0;
-		for (Type paramType : method.getGenericParameterTypes()) {
-			GraphQLParam graphQLParam = AnnotationUtils.findAnnotation(parameterAnnotations[index], GraphQLParam.class);
-
-			if (graphQLParam == null) {
-				LOGGER.error("Missing @GraphParam annotation on parameter index {} for method {}", index, method.getName());
-				continue;
-			}
-
-			paramBuilder = GraphQLArgument.newArgument().name(graphQLParam.name()).type(graphQLObjectMapper.getInputType(paramType));
-			if (dataFetcher.isPresent()) {
-				dataFetcher.get().addParam(graphQLParam.name(),
-						paramType,
-						Optional.<Object> fromNullable(AnnotationUtils.isNullValue(graphQLParam.defaultValue()) ? null : graphQLParam.defaultValue()));
-			}
-
-			argumentBuilder.add(paramBuilder.build());
-			index++;
-		}
-
-		return argumentBuilder.build();
-	}
 
 }

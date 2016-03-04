@@ -2,8 +2,11 @@ package com.bretpatterson.schemagen.graphql;
 
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLController;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
+import com.bretpatterson.schemagen.graphql.datafetchers.CollectionConverterDataFetcher;
 import com.bretpatterson.schemagen.graphql.datafetchers.DefaultMethodDataFetcher;
+import com.bretpatterson.schemagen.graphql.datafetchers.DefaultTypeConverter;
 import com.bretpatterson.schemagen.graphql.datafetchers.IDataFetcher;
+import com.bretpatterson.schemagen.graphql.datafetchers.MapConverterDataFetcher;
 import com.bretpatterson.schemagen.graphql.impl.GraphQLObjectMapper;
 import com.bretpatterson.schemagen.graphql.impl.SimpleTypeFactory;
 import com.bretpatterson.schemagen.graphql.relay.IRelayNodeFactory;
@@ -15,6 +18,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.ClassPath;
 import graphql.schema.GraphQLFieldDefinition;
@@ -24,8 +28,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -54,6 +60,7 @@ public class GraphQLSchemaBuilder {
 	private List<IGraphQLTypeMapper> typeMappers = new LinkedList<>();
 	private Optional<ITypeNamingStrategy> typeNamingStrategy = Optional.absent();
 	private Optional<IDataFetcherFactory> dataFetcherFactory = Optional.absent();
+	private Map<Class, Class<? extends DefaultTypeConverter>> defaultTypeConverters;
 	private Optional<Class<? extends IDataFetcher>> defaultMethodDataFetcher = Optional.absent();
 	private RelayDefaultNodeHandler.Builder relayDefaultNodeHandler = RelayDefaultNodeHandler.builder();
 	private List<Class> relayNodeTypes = Lists.newArrayList();
@@ -65,6 +72,7 @@ public class GraphQLSchemaBuilder {
 	private GraphQLSchemaBuilder() {
 		this.rootQueryBuilder = GraphQLObjectType.newObject().name("Query").description("Root of Query Schema");
 		this.rootMutationBuilder = GraphQLObjectType.newObject().name("Mutation").description("Root of Mutation Schema");
+		this.defaultTypeConverters = getDefaultTypeConverters();
 		try {
 			classLoader = getClass().getClassLoader();
 			classPath = ClassPath.from(classLoader);
@@ -158,6 +166,23 @@ public class GraphQLSchemaBuilder {
 		return this;
 	}
 
+	/**
+	 * These are used for converting field types to other types after datafetching. For example if you need to convert
+	 * a Long to a String you would register a type convert for type Long that knew how to convert Longs into strings.
+	 * By default we incldue the following type converters.
+	 * Collection ----> List
+	 * Map        ----> List  (list of entries)
+	 *
+	 * These are essentially DataFetchers that delegate to another datafetcher and then convert the returned value.
+	 * @param typeConverters mpa of the types to type converters.
+	 * @return
+	 */
+	public GraphQLSchemaBuilder registerDefaultTypeConverters(Map<Class, Class<? extends DefaultTypeConverter>> typeConverters) {
+		this.defaultTypeConverters = typeConverters;
+
+		return this;
+	}
+
 	public GraphQLSchemaBuilder relayEnabled(boolean relayEnabled) {
 		this.relayEnabled = relayEnabled;
 
@@ -181,10 +206,15 @@ public class GraphQLSchemaBuilder {
 		return builder.build();
 	}
 
+	@VisibleForTesting
+	public static Map<Class, Class<? extends DefaultTypeConverter>> getDefaultTypeConverters() {
+		return ImmutableMap.<Class, Class<? extends DefaultTypeConverter>>of(Collection.class, CollectionConverterDataFetcher.class, Map.class, MapConverterDataFetcher.class);
+	}
+
 	public GraphQLSchema build() {
 
 		this.typeMappers.addAll(0, getDefaultTypeMappers());
-		this.setGraphQLObjectMapper(new GraphQLObjectMapper(typeFactory, typeMappers, typeNamingStrategy, dataFetcherFactory, defaultMethodDataFetcher,  relayNodeTypes));
+		this.setGraphQLObjectMapper(new GraphQLObjectMapper(typeFactory, typeMappers, typeNamingStrategy, dataFetcherFactory, defaultMethodDataFetcher, defaultTypeConverters, relayNodeTypes));
 		// add our node handler first, as it's used by relay and we want people to be able to override it if they really want to
 		if (relayEnabled) {
 			graphQLControllers.add(0, relayDefaultNodeHandler.build());
@@ -206,7 +236,7 @@ public class GraphQLSchemaBuilder {
 					}
 					else {
 						// creat root object field with the controllers root object name to hold the queries object wrapper
-						GraphQLFieldDefinition.Builder rootViewField = GraphQLFieldDefinition.newFieldDefinition().name(graphQLController.rootQueriesObjectName()).staticValue(new Object());
+						GraphQLFieldDefinition.Builder rootViewField = GraphQLFieldDefinition.newFieldDefinition().name(graphQLController.rootQueriesObjectName()).staticValue(queryHandler);
 						// create field object to contain this controllers query fields
 						GraphQLObjectType.Builder viewerObject = GraphQLObjectType.newObject().name(graphQLController.rootQueriesObjectName());
 						viewerObject.fields(viewFields);
@@ -222,7 +252,7 @@ public class GraphQLSchemaBuilder {
 					}
 					else {
 						// create root object field with the controllers root object name to hold the mutations object wrapper
-						GraphQLFieldDefinition.Builder rootMutationField = GraphQLFieldDefinition.newFieldDefinition().name(graphQLController.rootMutationsObjectName()).staticValue(new Object());
+						GraphQLFieldDefinition.Builder rootMutationField = GraphQLFieldDefinition.newFieldDefinition().name(graphQLController.rootMutationsObjectName()).staticValue(queryHandler);
 						// create field object to contain this controllers mutation fields
 						GraphQLObjectType.Builder mutObject = GraphQLObjectType.newObject().name(graphQLController.rootMutationsObjectName());
 						mutObject.fields(mutFields);

@@ -2,6 +2,7 @@ package com.bretpatterson.schemagen.graphql.annotations;
 
 import com.bretpatterson.schemagen.graphql.datafetchers.IDataFetcher;
 import com.bretpatterson.schemagen.graphql.utils.AnnotationUtils;
+import graphql.schema.DataFetcher;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -26,5 +27,5 @@ public @interface GraphQLTypeMapper{
 	 * Allows you to override the default datafetcher for this data type.
 	 * @return
 	 */
-	Class dataFetcher() default AnnotationUtils.DEFAULT_NULL_CLASS.class;
+	Class<? extends DataFetcher> dataFetcher() default AnnotationUtils.DEFAULT_NULL_CLASS.class;
 }

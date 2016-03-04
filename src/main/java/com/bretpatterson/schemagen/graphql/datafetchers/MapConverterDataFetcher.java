@@ -14,34 +14,24 @@ import graphql.schema.PropertyDataFetcher;
  * This converts all Maps into a List of Entries who's key/values are accessible
  * This gets added to all Map's by default so they can be exposed through GraphQL
  */
-public class MapConverterDataFetcher implements IDataFetcher {
-	DataFetcher parentDataFetcher;
+public class MapConverterDataFetcher extends DefaultTypeConverter {
 
-	public MapConverterDataFetcher(DataFetcher parentDataFetcher) {
-		this.parentDataFetcher = parentDataFetcher;
+	public MapConverterDataFetcher(DataFetcher dataFetcher) {
+		super(dataFetcher);
 	}
 
-	@Override
-	public Object get(DataFetchingEnvironment environment) {
-		Map rv = (Map) parentDataFetcher.get(environment);
+	public Object convert(Object value) {
 
-		if (rv == null) {
+		if (value == null) {
 			return ImmutableList.of();
 		}
-		Map<Object, Object> rvMap = (Map) rv;
+		Map<Object, Object> valueMap = (Map) value;
 		// build an accessible copy of the entries to ensure we can get them via property datafetcher
-		ImmutableList.Builder<Map.Entry> rvList = ImmutableList.builder();
-		for (final Map.Entry<Object, Object> entry : rvMap.entrySet()) {
-			rvList.add(new Entry(entry.getKey(), entry.getValue()));
+		ImmutableList.Builder<Map.Entry> valueList = ImmutableList.builder();
+		for (final Map.Entry<Object, Object> entry : valueMap.entrySet()) {
+			valueList.add(new Entry(entry.getKey(), entry.getValue()));
 		}
-		return rvList.build();
-	}
-
-	@Override
-	public void addParam(final String name, final Type type, final Optional<Object> defaultValue) {
-		if (IDataFetcher.class.isAssignableFrom(parentDataFetcher.getClass())) {
-			((IDataFetcher)parentDataFetcher).addParam(name, type, defaultValue);
-		}
+		return valueList.build();
 	}
 
 	/**

@@ -2,12 +2,12 @@ package com.bretpatterson.schemagen.graphql.relay.controller;
 
 import com.bretpatterson.schemagen.graphql.relay.INode;
 
-import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeName;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLName;
 
 /**
  * Created by bpatterson on 1/30/16.
  */
-@GraphQLTypeName(name="User")
+@GraphQLName(name="User")
 public class UserDTO implements INode {
 	private String id;
 	private String name;

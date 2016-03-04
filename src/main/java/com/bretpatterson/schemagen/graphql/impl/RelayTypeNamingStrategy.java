@@ -1,7 +1,7 @@
 package com.bretpatterson.schemagen.graphql.impl;
 
 import com.bretpatterson.schemagen.graphql.IGraphQLObjectMapper;
-import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeName;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLName;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -16,7 +16,7 @@ public class RelayTypeNamingStrategy extends SimpleTypeNamingStrategy {
 		String typeString;
 		Class theClass = graphQLObjectMapper.getClassFromType(type);
 
-		GraphQLTypeName typeName = (GraphQLTypeName) theClass.getAnnotation(GraphQLTypeName.class);
+		GraphQLName typeName = (GraphQLName) theClass.getAnnotation(GraphQLName.class);
 		if (typeName != null) {
 			return typeName.name();
 		}
