@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
@@ -39,7 +40,12 @@ public class DefaultQueryAndMutationFactory implements IQueryFactory, IMutationF
 	public List<GraphQLFieldDefinition> newMethodMutationsForObject(IGraphQLObjectMapper graphQLObjectMapper, Object targetObject) {
 		List<GraphQLFieldDefinition> results = Lists.newLinkedList();
 
-		results.addAll(graphQLObjectMapper.getGraphQLFieldDefinitions(Optional.of(targetObject), targetObject.getClass(), targetObject.getClass()));
+		results.addAll(graphQLObjectMapper.getGraphQLFieldDefinitions(
+				Optional.of(targetObject),
+				targetObject.getClass(),
+				targetObject.getClass(),
+				Optional.of(AnnotationUtils.getFieldsWithAnnotation(targetObject.getClass(), GraphQLMutation.class)),
+				Optional.of(AnnotationUtils.getMethodsWithAnnotation(targetObject.getClass(), GraphQLMutation.class))));
 
 		return results;
 	}
@@ -54,7 +60,12 @@ public class DefaultQueryAndMutationFactory implements IQueryFactory, IMutationF
 	public List<GraphQLFieldDefinition> newMethodQueriesForObject(IGraphQLObjectMapper graphQLObjectMapper, Object targetObject) {
 		List<GraphQLFieldDefinition> results = Lists.newLinkedList();
 
-		results.addAll(graphQLObjectMapper.getGraphQLFieldDefinitions(Optional.of(targetObject), targetObject.getClass(), targetObject.getClass()));
+		results.addAll(graphQLObjectMapper.getGraphQLFieldDefinitions(
+				Optional.of(targetObject),
+				targetObject.getClass(),
+				targetObject.getClass(),
+				Optional.of(AnnotationUtils.getFieldsWithAnnotation(targetObject.getClass(), GraphQLQuery.class)),
+				Optional.of(AnnotationUtils.getMethodsWithAnnotation(targetObject.getClass(), GraphQLQuery.class))));
 
 		return results;
 	}
@@ -62,6 +73,5 @@ public class DefaultQueryAndMutationFactory implements IQueryFactory, IMutationF
 	protected GraphQLOutputType getReturnType(IGraphQLObjectMapper graphQLObjectMapper, Method method) {
 		return graphQLObjectMapper.getOutputType(method.getGenericReturnType());
 	}
-
 
 }

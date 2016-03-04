@@ -12,6 +12,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -94,5 +95,5 @@ public interface IGraphQLObjectMapper {
 	 */
 	void setDefaultMethodDataFetcher(Class<? extends IDataFetcher> defaultMethodDataFetcher);
 
-	Collection<GraphQLFieldDefinition> getGraphQLFieldDefinitions(Optional<Object> targetObject, Type type, Class classItem);
+	Collection<GraphQLFieldDefinition> getGraphQLFieldDefinitions(Optional<Object> targetObject, Type type, Class classItem, Optional<List<Field>> fields, Optional<List<Method>> methods);
 }

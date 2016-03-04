@@ -23,8 +23,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -67,7 +69,9 @@ public class SpringDataFetcherFactoryTest {
 						GraphQLSchemaBuilder.getDefaultTypeConverters(),
 						ImmutableList.<Class> of());
 
-		Collection<GraphQLFieldDefinition> fieldDefinitions = graphQLObjectMapper.getGraphQLFieldDefinitions(Optional.<Object>of(new SpringDataFetcherTest()), SpringDataFetcherTest.class, SpringDataFetcherTest.class);
+		Collection<GraphQLFieldDefinition> fieldDefinitions = graphQLObjectMapper.getGraphQLFieldDefinitions(Optional.<Object>of(new SpringDataFetcherTest()), SpringDataFetcherTest.class, SpringDataFetcherTest.class,
+																											 Optional.<List<java.lang.reflect.Field>>absent(),
+																											 Optional.<List<Method>>absent());
 
 		DataFetchingEnvironment environment = mock(DataFetchingEnvironment.class);
 		Field field = mock(Field.class);

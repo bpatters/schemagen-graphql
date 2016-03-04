@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
@@ -70,18 +71,30 @@ public class AnnotationUtils {
 		return results.build();
 	}
 
-	public static <T extends Annotation> Map<T, Method> getMethodsWithAnnotation(Class targetClass, Class<T> annotationClass) {
-		ImmutableMap.Builder<T, Method> methods = ImmutableMap.builder();
+	public static <T extends Annotation> List<Method> getMethodsWithAnnotation(Class targetClass, Class<T> annotationClass) {
+		ImmutableList.Builder<Method> methods = ImmutableList.builder();
 
 		for (Method method : targetClass.getDeclaredMethods()) {
 			T annotation = method.getAnnotation(annotationClass);
 			if (annotation != null) {
-				methods.put(annotation, method);
+				methods.add(method);
 			}
 		}
 
 		return methods.build();
+	}
 
+	public static <T extends Annotation> List<Field> getFieldsWithAnnotation(Class targetClass, Class<T> annotationClass) {
+		ImmutableList.Builder<Field> fields = ImmutableList.builder();
+
+		for (Field field : targetClass.getDeclaredFields()) {
+			T annotation = field.getAnnotation(annotationClass);
+			if (annotation != null) {
+				fields.add(field);
+			}
+		}
+
+		return fields.build();
 	}
 
 	public static boolean isNullValue(String value) {

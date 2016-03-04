@@ -515,7 +515,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 			}
 			// end when there are no more super classes and while ignore java.* types
 			while (classItem != null && !classPackage.startsWith("java.")) {
-				fields.addAll(getGraphQLFieldDefinitions(Optional.absent(), type, classItem));
+				fields.addAll(getGraphQLFieldDefinitions(Optional.absent(), type, classItem, Optional.<List<Field>>absent(), Optional.<List<Method>>absent()));
 
 				// pop currentContext
 				classItem = classItem.getSuperclass();
@@ -550,12 +550,17 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 		return rv;
 	}
 
-	public Collection<GraphQLFieldDefinition> getGraphQLFieldDefinitions(Optional<Object> targetObject, Type type, Class classItem) {
+	public Collection<GraphQLFieldDefinition> getGraphQLFieldDefinitions(Optional<Object> targetObject, Type type, Class classItem, Optional<List<Field>> fields, Optional<List<Method>> methods) {
 		Map<String, GraphQLFieldDefinition> fieldDefinitions = Maps.newLinkedHashMap();
 		Optional<GraphQLFieldDefinition> fieldDefinitionOptional;
 		Set<String> ignoredFields = Sets.newHashSet();
+		List<Field> fieldList;
+		List<Method> methodList;
 
-		for (Method m : classItem.getDeclaredMethods()) {
+		fieldList = fields.or(ImmutableList.copyOf(classItem.getDeclaredFields()));
+		methodList = methods.or(ImmutableList.copyOf(classItem.getDeclaredMethods()));
+
+		for (Method m : methodList) {
 			Optional<String> methodName = getFieldNameFromMethod(m);
 			// we only look at getters and is types
 			if (!methodName.isPresent()) {
@@ -571,7 +576,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 			}
 		}
 
-		for (Field field : classItem.getDeclaredFields()) {
+		for (Field field : fieldList) {
 			// skip ignored fields
 			if (null != field.getAnnotation(GraphQLIgnore.class) || ignoredFields.contains(field.getName())) {
 				// if it's marked ignored then remove it.
