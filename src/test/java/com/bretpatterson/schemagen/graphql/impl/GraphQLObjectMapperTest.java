@@ -6,7 +6,6 @@ import com.bretpatterson.schemagen.graphql.IGraphQLObjectMapper;
 import com.bretpatterson.schemagen.graphql.ITypeNamingStrategy;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLDataFetcher;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLIgnore;
-import com.bretpatterson.schemagen.graphql.annotations.GraphQLQuery;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeConverter;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
 import com.bretpatterson.schemagen.graphql.datafetchers.CollectionConverterDataFetcher;
@@ -18,7 +17,6 @@ import com.bretpatterson.schemagen.graphql.relay.RelayConnection;
 import com.bretpatterson.schemagen.graphql.typemappers.IGraphQLTypeMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
 import graphql.Scalars;
 import graphql.schema.DataFetcher;
@@ -32,7 +30,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.lang.reflect.Type;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -66,7 +63,7 @@ public class GraphQLObjectMapperTest {
 				Optional.<IDataFetcherFactory> absent(),
 				Optional.<Class<? extends IDataFetcher>> absent(),
 				GraphQLSchemaBuilder.getDefaultTypeConverters(),
-				ImmutableList.<Class> of());
+				ImmutableList.<Class<?>> of());
 
 	}
 
@@ -77,7 +74,7 @@ public class GraphQLObjectMapperTest {
 				Optional.<IDataFetcherFactory> absent(),
 				Optional.<Class<? extends IDataFetcher>> absent(),
 				GraphQLSchemaBuilder.getDefaultTypeConverters(),
-				ImmutableList.<Class> of());
+				ImmutableList.<Class<?>> of());
 
 	}
 
@@ -89,7 +86,7 @@ public class GraphQLObjectMapperTest {
 				Optional.<IDataFetcherFactory> absent(),
 				Optional.<Class<? extends IDataFetcher>> absent(),
 				GraphQLSchemaBuilder.getDefaultTypeConverters(),
-				ImmutableList.<Class> of());
+				ImmutableList.<Class<?>> of());
 		assertTypeMapping(Scalars.GraphQLString.getName(), Scalars.GraphQLString, graphQLObjectMapper.getOutputType(String.class));
 		assertTypeMapping(Scalars.GraphQLInt.getName(), Scalars.GraphQLInt, graphQLObjectMapper.getOutputType(Integer.class));
 		assertTypeMapping(Scalars.GraphQLInt.getName(), Scalars.GraphQLInt, graphQLObjectMapper.getOutputType(int.class));
@@ -122,6 +119,7 @@ public class GraphQLObjectMapperTest {
 				graphQLObjectMapper.getOutputType(this.getClass()));
 	}
 
+	@SuppressWarnings("serial")
 	@Test
 	public void testRelayConnectionType() {
 		IGraphQLObjectMapper graphQLObjectMapper = newGraphQLObjectMapper(Optional.<ITypeNamingStrategy> of(new RelayTypeNamingStrategy()));
@@ -145,25 +143,35 @@ public class GraphQLObjectMapperTest {
 
 	private class InnerGeneric<R, S> {
 
+		@SuppressWarnings("unused")
 		R rType;
+		@SuppressWarnings("unused")
 		S sType;
 	}
 
 	private class AnotherGenericObjectTest<R, S> {
 
+		@SuppressWarnings("unused")
 		R rType;
+		@SuppressWarnings("unused")
 		S sType;
 	}
 
 	private class GenericObjectTest<R, S> {
 
+		@SuppressWarnings("unused")
 		AnotherGenericObjectTest<S, R> srObject;
+		@SuppressWarnings("unused")
 		InnerGeneric<Float, Boolean> innerFloatDouble;
+		@SuppressWarnings("unused")
 		List<R> rList;
+		@SuppressWarnings("unused")
 		R rType;
+		@SuppressWarnings("unused")
 		S sType;
 	}
 
+	@SuppressWarnings("serial")
 	@Test
 	public void TestGenericObject() {
 		IGraphQLObjectMapper graphQLObjectMapper = newGraphQLObjectMapper(Optional.<ITypeNamingStrategy> absent());
@@ -215,6 +223,7 @@ public class GraphQLObjectMapperTest {
 
 		@GraphQLIgnore
 		private Map<String, String> keyValueStore;
+		@SuppressWarnings("unused")
 		private String stringField;
 	}
 
@@ -236,6 +245,7 @@ public class GraphQLObjectMapperTest {
 		InnerGeneric<R, S> innerGeneric;
 	}
 
+	@SuppressWarnings("serial")
 	@Test
 	public void testGenericObjectsVariableResolution() {
 		IGraphQLObjectMapper graphQLObjectMapper = newGraphQLObjectMapper(Optional.<ITypeNamingStrategy> absent());
@@ -274,7 +284,7 @@ public class GraphQLObjectMapperTest {
 	}
 
 	private class TestType {
-
+		@SuppressWarnings("unused")
 		String myfield;
 	}
 
@@ -329,6 +339,7 @@ public class GraphQLObjectMapperTest {
 		}
 	}
 
+	@SuppressWarnings("serial")
 	@Test
 	public void testCustomTypeMappers() {
 		IGraphQLObjectMapper graphQLObjectMapper = newGraphQLObjectMapper(
@@ -357,6 +368,7 @@ public class GraphQLObjectMapperTest {
 		}
 	}
 
+	@SuppressWarnings("serial")
 	@Test
 	public void testMethodBasedFields() {
 		IGraphQLObjectMapper graphQLObjectMapper = newGraphQLObjectMapper(
@@ -394,6 +406,7 @@ public class GraphQLObjectMapperTest {
 		}
 	}
 
+	@SuppressWarnings("serial")
 	@Test
 	public void testMethodOnlyFields() {
 		IGraphQLObjectMapper graphQLObjectMapper = newGraphQLObjectMapper(
@@ -415,6 +428,7 @@ public class GraphQLObjectMapperTest {
 		assertEquals(CollectionConverterDataFetcher.class, objectType.getFieldDefinition("stringList").getDataFetcher().getClass());
 	}
 
+	@SuppressWarnings("serial")
 	@Test
 	public void testEnumType() {
 		IGraphQLObjectMapper graphQLObjectMapper = newGraphQLObjectMapper(
@@ -432,6 +446,7 @@ public class GraphQLObjectMapperTest {
 		public AppendingTypeconverter(DataFetcher datafetcher) {
 			super(datafetcher);
 		}
+		@Override
 		public Object convert(Object value) {
 			return "prepend:"+value.toString();
 		}
@@ -445,6 +460,7 @@ public class GraphQLObjectMapperTest {
 
 	}
 
+	@SuppressWarnings("serial")
 	@Test
 	public void testTypeConverterDetection() {
 

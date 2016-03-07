@@ -91,6 +91,7 @@ public class GraphQLSchemaBuilderTest {
 		assertEquals("RenamedTestInputType_Input", queryType.getArgument("test").getType().getName());
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testMutation() {
 		GraphQLSchema schema = GraphQLSchemaBuilder.newBuilder()
@@ -104,13 +105,13 @@ public class GraphQLSchemaBuilderTest {
 
 		ExecutionResult result = new GraphQL(schema).execute("mutation M { setName(name: \"The new name\") }");
 
-		String newName = (String) ((Map) result.getData()).get("setName");
+		String newName = ((Map<String, String>) result.getData()).get("setName");
 		assertEquals(0, result.getErrors().size());
 		assertEquals("The new name", newName);
 
 		result = new GraphQL(schema).execute("query Q { getName }");
 
-		newName = (String) ((Map) result.getData()).get("getName");
+		newName = ((Map<String, String>) result.getData()).get("getName");
 		assertEquals(0, result.getErrors().size());
 		assertEquals("The new name", newName);
 	}
@@ -182,6 +183,7 @@ public class GraphQLSchemaBuilderTest {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testTypeConverterDetection() {
 		GraphQLSchema schema = GraphQLSchemaBuilder.newBuilder()
@@ -189,6 +191,6 @@ public class GraphQLSchemaBuilderTest {
 				.registerGraphQLControllerObjects(ImmutableList.<Object> of(new TypeConverterTest()))
 				.build();
 
-		assertEquals("prepend:1", ((Map)new GraphQL(schema).execute("{ someStrings }").getData()).get("someStrings"));
+		assertEquals("prepend:1", ((Map<String, String>)new GraphQL(schema).execute("{ someStrings }").getData()).get("someStrings"));
 	}
 }

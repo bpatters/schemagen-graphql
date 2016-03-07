@@ -1,7 +1,6 @@
 package com.bretpatterson.schemagen.graphql;
 
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLDataFetcher;
-import com.bretpatterson.schemagen.graphql.datafetchers.IDataFetcher;
 import com.google.common.base.Optional;
 import graphql.schema.DataFetcher;
 

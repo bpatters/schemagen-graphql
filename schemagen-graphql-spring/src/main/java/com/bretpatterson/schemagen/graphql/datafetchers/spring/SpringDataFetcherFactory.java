@@ -2,7 +2,6 @@ package com.bretpatterson.schemagen.graphql.datafetchers.spring;
 
 import com.bretpatterson.schemagen.graphql.IGraphQLObjectMapper;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLSpringELDataFetcher;
-import com.bretpatterson.schemagen.graphql.datafetchers.IDataFetcher;
 import com.bretpatterson.schemagen.graphql.impl.DefaultDataFetcherFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;

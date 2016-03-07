@@ -53,7 +53,7 @@ public class RelayTest {
 	private Map<String, Object> getQueryResults(ExecutionResult result, String queryName) {
 		Map<String, Object> results = (Map<String, Object>) ((Map<String, Object>) result.getData()).get("Queries");
 
-		return (Map) results.get(queryName);
+		return (Map<String, Object>) results.get(queryName);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -121,6 +121,7 @@ public class RelayTest {
 		return payload;
 	}
 
+	@SuppressWarnings("rawtypes")
 	private GameDTO getGameNode(String id) throws IOException {
 
 		ExecutionResult result = new GraphQL(schema).execute(String.format("{ node(id:\"%s\") {...on Game {id, name} } }", id));
@@ -129,6 +130,7 @@ public class RelayTest {
 		return objectMapper.readValue(objectMapper.writeValueAsString(((Map) result.getData()).get("node")), GameDTO.class);
 	}
 
+	@SuppressWarnings("rawtypes")
 	private UserDTO getUserNode(String id) throws IOException {
 
 		ExecutionResult result = new GraphQL(schema).execute(String.format("{ node(id:\"%s\") {...on User {id, name, email} } }", id));
@@ -147,7 +149,7 @@ public class RelayTest {
 		});
 	}
 
-	private <T> T deserialize(String value, TypeReference type) {
+	private <T> T deserialize(String value, TypeReference<?> type) {
 		try {
 			return objectMapper.readValue(value, type);
 		} catch (IOException ex) {

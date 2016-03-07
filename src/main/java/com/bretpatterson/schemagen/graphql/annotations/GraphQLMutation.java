@@ -1,6 +1,5 @@
 package com.bretpatterson.schemagen.graphql.annotations;
 
-import com.bretpatterson.schemagen.graphql.datafetchers.IMethodDataFetcher;
 import com.bretpatterson.schemagen.graphql.datafetchers.DefaultMethodDataFetcher;
 import com.bretpatterson.schemagen.graphql.utils.AnnotationUtils;
 

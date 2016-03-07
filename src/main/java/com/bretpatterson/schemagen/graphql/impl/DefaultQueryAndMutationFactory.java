@@ -1,29 +1,18 @@
 package com.bretpatterson.schemagen.graphql.impl;
 
-import com.bretpatterson.schemagen.graphql.datafetchers.IDataFetcher;
 import com.bretpatterson.schemagen.graphql.IGraphQLObjectMapper;
 import com.bretpatterson.schemagen.graphql.IMutationFactory;
 import com.bretpatterson.schemagen.graphql.IQueryFactory;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLMutation;
-import com.bretpatterson.schemagen.graphql.annotations.GraphQLParam;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLQuery;
 import com.bretpatterson.schemagen.graphql.utils.AnnotationUtils;
 import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLOutputType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Default implementation of the query/mutation factory. Converts a Method signature on an object into a:
@@ -35,8 +24,7 @@ import java.util.Map;
  */
 public class DefaultQueryAndMutationFactory implements IQueryFactory, IMutationFactory {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultQueryAndMutationFactory.class);
-
+	@Override
 	public List<GraphQLFieldDefinition> newMethodMutationsForObject(IGraphQLObjectMapper graphQLObjectMapper, Object targetObject) {
 		List<GraphQLFieldDefinition> results = Lists.newLinkedList();
 
@@ -57,6 +45,7 @@ public class DefaultQueryAndMutationFactory implements IQueryFactory, IMutationF
 	 * @param targetObject the target object the DataFetcher will invoke the method on.
 	 * @return
 	 */
+	@Override
 	public List<GraphQLFieldDefinition> newMethodQueriesForObject(IGraphQLObjectMapper graphQLObjectMapper, Object targetObject) {
 		List<GraphQLFieldDefinition> results = Lists.newLinkedList();
 
