@@ -15,9 +15,9 @@ public class SimpleTypeNamingStrategy implements ITypeNamingStrategy {
 	@Override
 	public String getTypeName(IGraphQLObjectMapper graphQLObjectMapper, Type type) {
 		String typeString;
-		Class theClass = graphQLObjectMapper.getClassFromType(type);
+		Class<?> theClass = graphQLObjectMapper.getClassFromType(type);
 
-		GraphQLName typeName = (GraphQLName) theClass.getAnnotation(GraphQLName.class);
+		GraphQLName typeName = theClass.getAnnotation(GraphQLName.class);
 		if (typeName != null) {
 			return typeName.name();
 		}

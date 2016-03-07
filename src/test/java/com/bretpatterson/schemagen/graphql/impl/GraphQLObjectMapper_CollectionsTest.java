@@ -55,7 +55,9 @@ public class GraphQLObjectMapper_CollectionsTest {
 
 	private class CollectionsTestObject {
 
+		@SuppressWarnings("unused")
 		String field1;
+		@SuppressWarnings("unused")
 		Integer field2;
 	}
 
@@ -73,7 +75,7 @@ public class GraphQLObjectMapper_CollectionsTest {
 				Optional.<IDataFetcherFactory>absent(),
 				Optional.<Class<? extends IDataFetcher>>absent(),
 				GraphQLSchemaBuilder.getDefaultTypeConverters(),
-				ImmutableList.<Class> of());
+				ImmutableList.<Class<?>> of());
 	}
 
 	private void assertGenericListTypeMapping(String name, GraphQLOutputType expectedWrappedType, GraphQLOutputType graphQLOutputType) {
@@ -111,6 +113,7 @@ public class GraphQLObjectMapper_CollectionsTest {
 		assertEquals(expectedValueType.getClass(), objectType.getFieldDefinition(MapMapper.VALUE_NAME).getType().getClass());
 	}
 
+	@SuppressWarnings("serial")
 	@Test
 	public void testGenericCollectionsMapping() {
 
@@ -140,6 +143,7 @@ public class GraphQLObjectMapper_CollectionsTest {
 				}.getType()));
 	}
 
+	@SuppressWarnings("serial")
 	@Test
 	public void testGenericListMappings() {
 
@@ -163,6 +167,7 @@ public class GraphQLObjectMapper_CollectionsTest {
 				}.getType()));
 	}
 
+	@SuppressWarnings("serial")
 	@Test
 	public void testGenericSetMappings() {
 
@@ -186,6 +191,7 @@ public class GraphQLObjectMapper_CollectionsTest {
 				}.getType()));
 	}
 
+	@SuppressWarnings("serial")
 	@Test
 	public void testGenericArrayListMapping() {
 
@@ -213,6 +219,7 @@ public class GraphQLObjectMapper_CollectionsTest {
 				}.getType()));
 	}
 
+	@SuppressWarnings("serial")
 	@Test
 	public void testGenericLinkedListMapping() {
 
@@ -242,6 +249,7 @@ public class GraphQLObjectMapper_CollectionsTest {
 				}.getType()));
 	}
 
+	@SuppressWarnings("serial")
 	@Test
 	public void testGenericHashSetMapping() {
 
@@ -267,6 +275,7 @@ public class GraphQLObjectMapper_CollectionsTest {
 				}.getType()));
 	}
 
+	@SuppressWarnings("serial")
 	@Test
 	public void testGenericTreeSetMapping() {
 
@@ -294,6 +303,7 @@ public class GraphQLObjectMapper_CollectionsTest {
 
 
 
+	@SuppressWarnings("serial")
 	@Test
 	public void testGenericVectorMapping() {
 
@@ -320,8 +330,10 @@ public class GraphQLObjectMapper_CollectionsTest {
 
 
 	private class GenericMapTestObject {
+		@SuppressWarnings("unused")
 		Map<String,String> mapField;
 	}
+	@SuppressWarnings("serial")
 	@Test
 	public void testGenericMapTypeMapping() {
 
@@ -349,6 +361,7 @@ public class GraphQLObjectMapper_CollectionsTest {
 
 	}
 
+	@SuppressWarnings("serial")
 	@Test
 	public void testRecursiveTypes() {
 		GraphQLList listType = (GraphQLList) graphQLObjectMapper

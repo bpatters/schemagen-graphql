@@ -63,7 +63,7 @@ public interface IGraphQLObjectMapper {
 	 * @param type
 	 * @return
 	 */
-	Class getClassFromType(Type type);
+	Class<?> getClassFromType(Type type);
 
 	/**
 	 * Returns all input types created.
@@ -95,5 +95,5 @@ public interface IGraphQLObjectMapper {
 	 */
 	void setDefaultMethodDataFetcher(Class<? extends IDataFetcher> defaultMethodDataFetcher);
 
-	Collection<GraphQLFieldDefinition> getGraphQLFieldDefinitions(Optional<Object> targetObject, Type type, Class classItem, Optional<List<Field>> fields, Optional<List<Method>> methods);
+	Collection<GraphQLFieldDefinition> getGraphQLFieldDefinitions(Optional<Object> targetObject, Type type, Class<?> classItem, Optional<List<Field>> fields, Optional<List<Method>> methods);
 }

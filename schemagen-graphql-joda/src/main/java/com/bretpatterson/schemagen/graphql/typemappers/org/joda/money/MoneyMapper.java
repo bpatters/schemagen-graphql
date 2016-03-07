@@ -16,6 +16,7 @@ import java.lang.reflect.Type;
  */
 @GraphQLTypeMapper(type=Money.class)
 public class MoneyMapper implements IGraphQLTypeMapper {
+	@Override
 	public boolean handlesType(IGraphQLObjectMapper graphQLObjectMapper, Type type) {
 		return type == Money.class;
 	}

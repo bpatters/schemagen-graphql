@@ -1,14 +1,10 @@
 package com.bretpatterson.schemagen.graphql.datafetchers;
 
-import java.lang.reflect.Type;
 import java.util.Map;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import graphql.schema.DataFetcher;
-import graphql.schema.DataFetchingEnvironment;
-import graphql.schema.PropertyDataFetcher;
 
 /**
  * This converts all Maps into a List of Entries who's key/values are accessible
@@ -20,16 +16,18 @@ public class MapConverterDataFetcher extends DefaultTypeConverter {
 		super(dataFetcher);
 	}
 
+	@SuppressWarnings("unchecked")
+	@Override
 	public Object convert(Object value) {
 
 		if (value == null) {
 			return ImmutableList.of();
 		}
-		Map<Object, Object> valueMap = (Map) value;
+		Map<Object, Object> valueMap = (Map<Object, Object>) value;
 		// build an accessible copy of the entries to ensure we can get them via property datafetcher
-		ImmutableList.Builder<Map.Entry> valueList = ImmutableList.builder();
+		ImmutableList.Builder<Map.Entry<Object, Object>> valueList = ImmutableList.builder();
 		for (final Map.Entry<Object, Object> entry : valueMap.entrySet()) {
-			valueList.add(new Entry(entry.getKey(), entry.getValue()));
+			valueList.add(new Entry(entry));
 		}
 		return valueList.build();
 	}
@@ -37,14 +35,14 @@ public class MapConverterDataFetcher extends DefaultTypeConverter {
 	/**
 	 * This holds a Map.Entry instance that we use to hold the Map.Entry in maps that we have remapped to List<Entry> objects.
 	 */
-	public class Entry implements Map.Entry {
+	public class Entry implements Map.Entry<Object, Object> {
 
 		Object key;
 		Object value;
 
-		public Entry(Object key, Object value) {
-			this.key = key;
-			this.value = value;
+		public Entry(Map.Entry<Object, Object> entry) {
+			this.key = entry.getKey();
+			this.value = entry.getValue();
 		}
 
 		@Override

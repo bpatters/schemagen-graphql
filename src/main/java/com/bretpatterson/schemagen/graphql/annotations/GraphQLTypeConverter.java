@@ -7,7 +7,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import com.bretpatterson.schemagen.graphql.datafetchers.DefaultTypeConverter;
-import graphql.schema.DataFetcher;
 
 /**
  * Fields annotated with this use the specified type converter for type conversion

@@ -5,9 +5,7 @@ import com.bretpatterson.schemagen.graphql.IDataFetcherFactory;
 import com.bretpatterson.schemagen.graphql.ITypeNamingStrategy;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLParam;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLSpringELDataFetcher;
-import com.bretpatterson.schemagen.graphql.datafetchers.DefaultMethodDataFetcher;
 import com.bretpatterson.schemagen.graphql.datafetchers.IDataFetcher;
-import com.bretpatterson.schemagen.graphql.datafetchers.spring.SpringDataFetcher;
 import com.bretpatterson.schemagen.graphql.datafetchers.spring.SpringDataFetcherFactory;
 import com.bretpatterson.schemagen.graphql.impl.GraphQLObjectMapper;
 import com.bretpatterson.schemagen.graphql.impl.SimpleTypeFactory;
@@ -25,11 +23,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static org.mockito.BDDMockito.willReturn;
 import static org.mockito.Mockito.mock;
@@ -67,7 +63,7 @@ public class SpringDataFetcherFactoryTest {
 						Optional.<IDataFetcherFactory> of(factory),
 						Optional.<Class<? extends IDataFetcher>> absent(),
 						GraphQLSchemaBuilder.getDefaultTypeConverters(),
-						ImmutableList.<Class> of());
+						ImmutableList.<Class<?>> of());
 
 		Collection<GraphQLFieldDefinition> fieldDefinitions = graphQLObjectMapper.getGraphQLFieldDefinitions(Optional.<Object>of(new SpringDataFetcherTest()), SpringDataFetcherTest.class, SpringDataFetcherTest.class,
 																											 Optional.<List<java.lang.reflect.Field>>absent(),

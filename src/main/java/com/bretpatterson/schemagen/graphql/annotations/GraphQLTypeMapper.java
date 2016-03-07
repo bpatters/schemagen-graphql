@@ -1,6 +1,5 @@
 package com.bretpatterson.schemagen.graphql.annotations;
 
-import com.bretpatterson.schemagen.graphql.datafetchers.IDataFetcher;
 import com.bretpatterson.schemagen.graphql.utils.AnnotationUtils;
 import graphql.schema.DataFetcher;
 
@@ -20,7 +19,7 @@ public @interface GraphQLTypeMapper{
 	 * The Class this type mapper knows how to handle.
 	 * @return
 	 */
-	Class type();
+	Class<?> type();
 
 
 	/**

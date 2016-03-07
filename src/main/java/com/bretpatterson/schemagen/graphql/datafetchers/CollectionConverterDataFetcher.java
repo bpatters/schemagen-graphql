@@ -1,12 +1,9 @@
 package com.bretpatterson.schemagen.graphql.datafetchers;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import graphql.schema.DataFetcher;
-import graphql.schema.DataFetchingEnvironment;
-import graphql.schema.PropertyDataFetcher;
 
-import java.lang.reflect.Type;
+import graphql.schema.DataFetcher;
+
 import java.util.Collection;
 
 /**
@@ -20,7 +17,7 @@ public class CollectionConverterDataFetcher extends DefaultTypeConverter {
 
 	@Override
 	public Object convert(Object value) {
-		Collection rv = (Collection) value;
+		Collection<?> rv = (Collection<?>) value;
 
 		if (rv == null) {
 			return ImmutableList.of();

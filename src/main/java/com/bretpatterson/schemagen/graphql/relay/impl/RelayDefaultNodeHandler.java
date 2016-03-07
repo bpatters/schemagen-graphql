@@ -24,6 +24,7 @@ public class RelayDefaultNodeHandler implements IRelayNodeHandler {
 		this.nodeFactories = nodeFactories;
 	}
 
+	@Override
 	@GraphQLQuery
 	@GraphQLName(name="node")
 	public INode findNodeById(@GraphQLParam(name="id") String nodeId) {
