@@ -7,7 +7,7 @@ import graphql.schema.GraphQLOutputType;
 import java.lang.reflect.Type;
 
 /**
- * Used to implement your own customer Object --> GraphQLType.
+ * Used to implement your own customer Object {@literal --->} GraphQLType.
  */
 public interface IGraphQLTypeMapper {
 
@@ -15,7 +15,7 @@ public interface IGraphQLTypeMapper {
 	 * Only used when you are seeking to handle all types that implement a specific interface.
 	 * For example if you want to write a CollectionTypeMapper you would implement this method
 	 * and then register your implementation as an interface based type mapper. These are more expensive
-	 * to  process because we  don't map from type-->mapper but instead search for the first registered
+	 * to  process because we  don't map from type {@literal -->} mapper but instead search for the first registered
 	 * interface mapper that handles the specified type.
 	 *
 	 * @param graphQLObjectMapper

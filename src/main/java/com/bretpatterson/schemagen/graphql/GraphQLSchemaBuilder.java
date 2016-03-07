@@ -169,8 +169,8 @@ public class GraphQLSchemaBuilder {
 	 * These are used for converting field types to other types after datafetching. For example if you need to convert
 	 * a Long to a String you would register a type convert for type Long that knew how to convert Longs into strings.
 	 * By default we incldue the following type converters.
-	 * Collection ----> List
-	 * Map        ----> List  (list of entries)
+	 * Collection {@literal --->} List
+	 * Map        {@literal --->} List  (list of entries)
 	 *
 	 * These are essentially DataFetchers that delegate to another datafetcher and then convert the returned value.
 	 * @param typeConverters mpa of the types to type converters.

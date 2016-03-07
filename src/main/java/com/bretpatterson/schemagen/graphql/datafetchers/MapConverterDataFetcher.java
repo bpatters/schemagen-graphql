@@ -33,7 +33,7 @@ public class MapConverterDataFetcher extends DefaultTypeConverter {
 	}
 
 	/**
-	 * This holds a Map.Entry instance that we use to hold the Map.Entry in maps that we have remapped to List<Entry> objects.
+	 * This holds a Map.Entry instance that we use to hold the Map.Entry in maps that we have remapped to {@code List<Entry>} objects.
 	 */
 	public class Entry implements Map.Entry<Object, Object> {
 

@@ -18,7 +18,7 @@ import java.util.Map;
 
 /**
  * GraphQL doesn't support generic maps fully. However this implementation attempts to support them as best it can. It currently supports
- * {@code Map<Enum, Object> } since the set of keys is well defined. In this case it maps this datatype to an Object of Enum --> GraphQLType
+ * {@code Map<Enum, Object> } since the set of keys is well defined. In this case it maps this datatype to an Object of Enum {@literal -->} GraphQLType
  * where the keys of Enum are fields and values are the field values.
  */
 @GraphQLTypeMapper(type = Map.class)

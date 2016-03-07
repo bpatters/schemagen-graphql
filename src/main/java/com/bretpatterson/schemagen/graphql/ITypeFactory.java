@@ -12,8 +12,9 @@ public interface ITypeFactory {
 	 * Object type of the arg can be any object type within java we exposed through GraphQL as a parameter.
 	 * IE everyone of your query/mutation parameter objects must be handled by this object.
 	 * Jackson object mapper is a simple way of doing this. IE:
-	 * <code>
-	 * @Override
+	 * <pre>
+	 * {@code
+	 * {@liter @Override}
 	 * public Object convertToType(Type type, Object arg) {
 	 *		try {
 	 *			return objectMapper.readValue(objectMapper.writeValueAsString(arg), TypeFactory.defaultInstance().constructType(type));
@@ -22,10 +23,10 @@ public interface ITypeFactory {
 	 *		}
 	 *
 	 *	}
-	 * </code>
+	 * }</pre>
 	 *
 	 * @param type The type to convert the object to. This is a ParameterizedType if the original value is so you can recursively determine
-	 *             what value you should convert to. IE: List&lt;List&lt;Object&gt;&gt;
+	 *             what value you should convert to. IE: {@code List<List<Object>>}
 	 * @param arg The GraphQL version of the argument value IE: Primitive, Object, List of ...
 	 * @return
 	 */
