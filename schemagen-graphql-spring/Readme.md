@@ -2,11 +2,9 @@ This module includes a Spring Expression Language (EL) Datafetcher.
 
 ----
 
-The primary purpose of this Data fetcher is to enable us to be Lazy!. As in hibernate style lazy fetching meets GraphQL.
+The primary purpose of this Data fetcher is to enable us bring the concept of Hibernate Lazy Fetches to GraphQL.
 
-In this page we are going to talk about being lazy. As in *do nothing you don't have to*, or more specifically don't fetch a large number of relationships when you don't need them. 
-
-First off let's assume you are going to implement a Calendar application that has two views, A month view and a Week view of the following graph:
+Let's assume you are going to implement a Calendar application that has two views, A month view and a Week view of the following graph:
 
 ![](https://github.com/bpatters/schemagen-graphql/blob/master/wiki/images/sampleGraph.png?raw=true)
 
@@ -16,7 +14,7 @@ Calendar ----> CalendarItem
 
 
 This is what we call a top level relationship, or in other words it's an entrypoint into the graph.
-For these you expose a query field on the top level static Calenar object like:
+For these you expose a query field on the top level static Calendar object like:
 
     @GraphQuery(name="calendarItems")
     List<CalendarItem> getCalendarItems(@GraphQLParam("startDate") Date startDate, @GraphQLParam("endDate") Data endDate);
@@ -45,7 +43,8 @@ To do this you would use the following GraphQL Query
 
 This would call the getCalendarItems endpoint and return only the title and dateTime fields for all calendar items. Not bad, if you had a 100 calendar items for the month and 50 guests for each calendar item (you're a popular person!) you would get a list of JSON response payload of 100 calendar items like:
 
-    [ {"title":"title1", "dateAndTime":"1/1/2016"} ... ]
+    { "data": [ {"title":"title1", "dateAndTime":"1/1/2016"} ... ] }
+    
 
 This would be a reasonable amount of data, and the minimal set, to return from the Backend to the UI. However, let's look a bit deeper on the backend and what it has to do to solve this request. Let's assume you have the following two classes representing the CalendarItem and it's Guests (users):
     
