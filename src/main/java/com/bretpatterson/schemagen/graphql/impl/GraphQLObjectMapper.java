@@ -62,8 +62,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import static javafx.scene.input.KeyCode.F;
-
 /**
  * This is the meat of the schema gen package. Utilizing the configured properties it will traverse the objects provided and generate a type
  * hierarchy for GraphQL.
