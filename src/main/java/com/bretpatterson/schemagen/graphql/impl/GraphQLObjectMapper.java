@@ -7,6 +7,7 @@ import com.bretpatterson.schemagen.graphql.IQueryFactory;
 import com.bretpatterson.schemagen.graphql.ITypeNamingStrategy;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLController;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLDataFetcher;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLDeprecated;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLIgnore;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLMutation;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLName;
@@ -60,6 +61,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+
+import static javafx.scene.input.KeyCode.F;
 
 /**
  * This is the meat of the schema gen package. Utilizing the configured properties it will traverse the objects provided and generate a type
@@ -174,17 +177,55 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 		}
 		return fieldName;
 	}
+	
+	private Optional<Field> getField(Class<?> typeClass, String fieldName) {
+		try {
+			return Optional.of(typeClass.getDeclaredField(fieldName));
+		} catch (Exception ex) {
+			LOGGER.info("No field matching :" + fieldName);
+		}
+		return Optional.absent();
+	}
+
+	private GraphQLFieldDefinition.Builder processDeprecated(GraphQLFieldDefinition.Builder builder, Optional<Method> method, Optional<Field> field) {
+		GraphQLDeprecated deprecated = null;
+		Deprecated javaDeprecreated = null;
+		if (method.isPresent()) {
+			deprecated = method.get().getAnnotation(GraphQLDeprecated.class);
+			javaDeprecreated = method.get().getAnnotation(Deprecated.class);
+		}
+		if (field.isPresent()) {
+			if (deprecated == null) {
+				deprecated = field.get().getAnnotation(GraphQLDeprecated.class);
+			}
+			if (javaDeprecreated == null) {
+				javaDeprecreated = field.get().getAnnotation(Deprecated.class);
+			}
+		}
+
+		if (deprecated != null) {
+			builder.deprecate(deprecated.value());
+		} else if (javaDeprecreated != null) {
+			builder.deprecate("");
+		}
+
+		return builder;
+	}
 
 	public Optional<GraphQLFieldDefinition> getFieldType(Type type, Method method, Optional<Object> targetObject,  Optional<String> providedFieldName) {
-		Type fieldType = method.getGenericReturnType();
-		Class<?> fieldTypeClass = getClassFromType(fieldType);
 		Optional<String> fieldName = providedFieldName.isPresent() ? providedFieldName : getFieldNameFromMethod(method);
-		GraphQLOutputType graphQLFieldType = getOutputType(fieldType);
-		Class<? extends DataFetcher> dataFetcherClass = getDefaultMethodDataFetcher();
-
 		if (!fieldName.isPresent()) {
 			return Optional.absent();
 		}
+
+		Type fieldType = method.getGenericReturnType();
+		Class<?> fieldTypeClass = getClassFromType(fieldType);
+		GraphQLOutputType graphQLFieldType = getOutputType(fieldType);
+		Class<? extends DataFetcher> dataFetcherClass = getDefaultMethodDataFetcher();
+		Class<?> typeClass = getClassFromType(type);
+		Optional<Field> field = getField(typeClass, fieldName.get());
+
+
 		GraphQLName name = method.getAnnotation(GraphQLName.class);
 		if (name != null) {
 			fieldName = Optional.of(name.name());
@@ -205,14 +246,8 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 		GraphQLDataFetcher dataFetcherAnnotation = method.getAnnotation(GraphQLDataFetcher.class);
 		// next check field for a datafetcher annotation in case it's not on the method
 		if (dataFetcherAnnotation == null) {
-			Class<?> typeClass = getClassFromType(type);
-			try {
-				Field field = typeClass.getDeclaredField(fieldName.get());
-				if (field != null) {
-					dataFetcherAnnotation = field.getAnnotation(GraphQLDataFetcher.class);
-				}
-			} catch (Exception ex) {
-				LOGGER.info("No field matching method:" + method.getName());
+			if (field.isPresent()) {
+				dataFetcherAnnotation = field.get().getAnnotation(GraphQLDataFetcher.class);
 			}
 		}
 
@@ -231,7 +266,8 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 		dataFetcher = addTypeConverter(Optional.fromNullable(method.getAnnotation(GraphQLTypeConverter.class)), fieldTypeClass, dataFetcher);
 
 		builder.dataFetcher(dataFetcher);
-
+		processDeprecated(builder, Optional.of(method), field);
+		
 		return Optional.of(builder.build());
 	}
 
@@ -329,6 +365,8 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 				if (dataFetcher != null) {
 					builder.dataFetcher(dataFetcher);
 				}
+
+				processDeprecated(builder, Optional.<Method>absent(), Optional.of(field));
 
 				return Optional.of(builder.build());
 			} catch (NotMappableException ex) {

@@ -5,6 +5,7 @@ import com.bretpatterson.schemagen.graphql.IDataFetcherFactory;
 import com.bretpatterson.schemagen.graphql.IGraphQLObjectMapper;
 import com.bretpatterson.schemagen.graphql.ITypeNamingStrategy;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLDataFetcher;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLDeprecated;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLIgnore;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeConverter;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
@@ -36,6 +37,7 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -468,5 +470,28 @@ public class GraphQLObjectMapperTest {
 				ImmutableList.<IGraphQLTypeMapper> builder().add(new TestTypeMapper()).addAll(GraphQLSchemaBuilder.getDefaultTypeMappers()).build());
 		GraphQLObjectType objectType = (GraphQLObjectType) graphQLObjectMapper.getOutputType(new TypeToken<TypeConverterTest>(){}.getType());
 		assertEquals(AppendingTypeconverter.class, objectType.getFieldDefinition("someStrings").getDataFetcher().getClass());
+	}
+
+
+
+	public class TestDeprecratedClass {
+		@GraphQLDeprecated("Old usage")
+		String deprecatedField;
+
+		@Deprecated
+		String javaDeprecatedField;
+	}
+	@Test
+	public void testDeprecated() {
+		IGraphQLObjectMapper graphQLObjectMapper = newGraphQLObjectMapper(
+				ImmutableList.<IGraphQLTypeMapper> builder().addAll(GraphQLSchemaBuilder.getDefaultTypeMappers()).build());
+		GraphQLObjectType objectType = (GraphQLObjectType) graphQLObjectMapper.getOutputType(new TypeToken<TestDeprecratedClass>(){}.getType());
+
+		assertNotNull(objectType.getFieldDefinition("deprecatedField"));
+		assertTrue(objectType.getFieldDefinition("deprecatedField").isDeprecated());
+		assertEquals("Old usage", objectType.getFieldDefinition("deprecatedField").getDeprecationReason());
+
+		assertTrue(objectType.getFieldDefinition("javaDeprecatedField").isDeprecated());
+		assertEquals("", objectType.getFieldDefinition("javaDeprecatedField").getDeprecationReason());
 	}
 }
