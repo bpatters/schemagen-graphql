@@ -6,7 +6,9 @@ import com.bretpatterson.schemagen.graphql.IGraphQLObjectMapper;
 import com.bretpatterson.schemagen.graphql.ITypeNamingStrategy;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLDataFetcher;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLDeprecated;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLDescription;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLIgnore;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLName;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeConverter;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
 import com.bretpatterson.schemagen.graphql.datafetchers.CollectionConverterDataFetcher;
@@ -493,5 +495,30 @@ public class GraphQLObjectMapperTest {
 
 		assertTrue(objectType.getFieldDefinition("javaDeprecatedField").isDeprecated());
 		assertEquals("", objectType.getFieldDefinition("javaDeprecatedField").getDeprecationReason());
+	}
+
+
+	@GraphQLDescription("The class description")
+	public class TestDocumentationClass {
+		@GraphQLDescription("The field description")
+		String field;
+
+		@GraphQLDescription("The method description")
+		String getValue() {
+			return "true";
+		}
+	}
+
+	@Test
+	public void testDocumentedAttributes() {
+		IGraphQLObjectMapper graphQLObjectMapper = newGraphQLObjectMapper(
+				ImmutableList.<IGraphQLTypeMapper> builder().addAll(GraphQLSchemaBuilder.getDefaultTypeMappers()).build());
+		GraphQLObjectType objectType = (GraphQLObjectType) graphQLObjectMapper.getOutputType(new TypeToken<TestDocumentationClass>() {
+		}.getType());
+
+		assertNotNull(objectType.getFieldDefinition("field"));
+		assertEquals("The class description",objectType.getDescription());
+		assertEquals("The field description", objectType.getFieldDefinition("field").getDescription());
+		assertEquals("The method description", objectType.getFieldDefinition("value").getDescription());
 	}
 }

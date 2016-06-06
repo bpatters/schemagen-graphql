@@ -1,6 +1,7 @@
 package com.bretpatterson.schemagen.graphql;
 
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLController;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLDescription;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
 import com.bretpatterson.schemagen.graphql.datafetchers.CollectionConverterDataFetcher;
 import com.bretpatterson.schemagen.graphql.datafetchers.DefaultTypeConverter;
@@ -238,6 +239,9 @@ public class GraphQLSchemaBuilder {
 						GraphQLFieldDefinition.Builder rootViewField = GraphQLFieldDefinition.newFieldDefinition().name(graphQLController.rootQueriesObjectName()).staticValue(queryHandler);
 						// create field object to contain this controllers query fields
 						GraphQLObjectType.Builder viewerObject = GraphQLObjectType.newObject().name(graphQLController.rootQueriesObjectName());
+						if (!AnnotationUtils.isNullValue(graphQLController.queryDescription())) {
+							viewerObject.description(graphQLController.queryDescription());
+						}
 						viewerObject.fields(viewFields);
 
 						rootViewField.type(viewerObject.build());
@@ -254,6 +258,9 @@ public class GraphQLSchemaBuilder {
 						GraphQLFieldDefinition.Builder rootMutationField = GraphQLFieldDefinition.newFieldDefinition().name(graphQLController.rootMutationsObjectName()).staticValue(queryHandler);
 						// create field object to contain this controllers mutation fields
 						GraphQLObjectType.Builder mutObject = GraphQLObjectType.newObject().name(graphQLController.rootMutationsObjectName());
+						if (!AnnotationUtils.isNullValue(graphQLController.mutationDescription())) {
+							mutObject.description(graphQLController.mutationDescription());
+						}
 						mutObject.fields(mutFields);
 
 						rootMutationField.type(mutObject.build());

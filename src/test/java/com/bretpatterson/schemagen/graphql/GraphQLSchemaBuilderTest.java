@@ -1,6 +1,7 @@
 package com.bretpatterson.schemagen.graphql;
 
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLController;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLDescription;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLMutation;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLParam;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLQuery;
@@ -192,5 +193,38 @@ public class GraphQLSchemaBuilderTest {
 				.build();
 
 		assertEquals("prepend:1", ((Map<String, String>)new GraphQL(schema).execute("{ someStrings }").getData()).get("someStrings"));
+	}
+
+	@GraphQLController(rootQueriesObjectName = "Queries", rootMutationsObjectName = "Mutations",
+			queryDescription="Query Description", mutationDescription="Mutation Description")
+	public class DocumentedMethodsTest {
+
+		@GraphQLQuery(name="someStrings")
+		@GraphQLDescription("getSomeStrings description")
+		public String getSomeStrings() {
+			return "1";
+		}
+
+		@GraphQLMutation(name="someStrings")
+		@GraphQLDescription("setSomeStrings description")
+		public String setSomeStrings(@GraphQLParam(name = "name")
+									 @GraphQLDescription("setSomeStrings param name description")
+									 String name) {
+			return "1";
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testDocumentedControllerAndMethods() {
+		GraphQLSchema schema = GraphQLSchemaBuilder.newBuilder()
+				.registerTypeFactory(new JacksonTypeFactory(new ObjectMapper()))
+				.registerGraphQLControllerObjects(ImmutableList.<Object>of(new DocumentedMethodsTest()))
+				.build();
+
+		GraphQLObjectType mutationType = (GraphQLObjectType) schema.getMutationType().getFieldDefinition("Mutations").getType();
+		GraphQLObjectType queryType = (GraphQLObjectType) schema.getQueryType().getFieldDefinition("Queries").getType();;
+		assertEquals("Mutation Description", mutationType.getDescription());
+		assertEquals("Query Description", queryType.getDescription());
 	}
 }

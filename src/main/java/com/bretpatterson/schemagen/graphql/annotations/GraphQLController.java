@@ -48,4 +48,16 @@ public @interface GraphQLController {
 	 * @return
 	 */
 	Class<? extends IMutationFactory> mutationFactory() default DefaultQueryAndMutationFactory.class;
+
+	/**
+	 * Set the description for the root query object name
+	 * @return
+	 */
+	String queryDescription() default AnnotationUtils.DEFAULT_NULL;
+
+	/**
+	 * Set the description for the root mutation object name
+	 * @return
+	 */
+	String mutationDescription() default AnnotationUtils.DEFAULT_NULL;
 }
