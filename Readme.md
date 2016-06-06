@@ -11,6 +11,7 @@ The versioning follows [Semantic Versioning](http://semver.org).
 - [Basic Concepts](#basic-concepts)
 - [GraphQL Controllers](#graphql-controllers)
 - [Type Mappers](#type-mappers)
+- [Companies using in Production](#companies-using-in-production)
 
 ### Overview
 
@@ -229,4 +230,7 @@ which outputs:
   }
 ```
 
+# Companies using in Production
+The following companies have been using in production
 
+- Spredfast
