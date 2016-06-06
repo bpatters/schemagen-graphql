@@ -8,6 +8,7 @@ import com.bretpatterson.schemagen.graphql.ITypeNamingStrategy;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLController;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLDataFetcher;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLDeprecated;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLDescription;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLIgnore;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLMutation;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLName;
@@ -25,6 +26,7 @@ import com.bretpatterson.schemagen.graphql.typemappers.IGraphQLTypeMapper;
 import com.bretpatterson.schemagen.graphql.utils.AnnotationUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -225,6 +227,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 
 
 		GraphQLName name = method.getAnnotation(GraphQLName.class);
+		Optional<GraphQLDescription> maybeDescription = Optional.fromNullable(method.getAnnotation(GraphQLDescription.class));
 		if (name != null) {
 			fieldName = Optional.of(name.name());
 		}
@@ -238,6 +241,10 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 			if (!AnnotationUtils.isNullValue(typeMapperAnnotation.dataFetcher())) {
 				dataFetcherClass = typeMapperAnnotation.dataFetcher();
 			}
+		}
+
+		if (maybeDescription.isPresent() && !AnnotationUtils.isNullValue(maybeDescription.get().value())) {
+			builder.description(maybeDescription.get().value());
 		}
 
 		// next check if there is annotation on the method
@@ -273,18 +280,24 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 		Annotation[][] parameterAnnotations = method.getParameterAnnotations();
 		int index = 0;
 		for (Type paramType : method.getGenericParameterTypes()) {
-			GraphQLParam graphQLParam = AnnotationUtils.findAnnotation(parameterAnnotations[index], GraphQLParam.class);
+			Optional<GraphQLParam> maybeGraphQLParam = Optional.fromNullable(AnnotationUtils.findAnnotation(parameterAnnotations[index], GraphQLParam.class));
+			Optional<GraphQLDescription> maybeGraphQLParamDesc = Optional.fromNullable(AnnotationUtils.findAnnotation(parameterAnnotations[index], GraphQLDescription.class));
 
-			if (graphQLParam == null) {
+			if (!maybeGraphQLParam.isPresent()) {
 				LOGGER.error("Missing @GraphParam annotation on parameter index {} for method {}", index, method.getName());
 				continue;
 			}
+			GraphQLParam graphQLParam = maybeGraphQLParam.get();
 			GraphQLArgument.Builder argBuilder = GraphQLArgument.newArgument().type(getInputType(paramType)).name(graphQLParam.name());
+
+			if (maybeGraphQLParamDesc.isPresent()) {
+				argBuilder.description(maybeGraphQLParamDesc.get().value());
+			}
 
 			if (!AnnotationUtils.isNullValue(graphQLParam.defaultValue())) {
 				argBuilder.defaultValue(graphQLParam.defaultValue());
-
 			}
+
 			builder.argument(argBuilder.build());
 
 			dataFetcher.addParam(graphQLParam.name(),
@@ -331,6 +344,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 		} else {
 			LOGGER.info("Processing types {} field {}  ", type, field);
 			GraphQLName name = field.getAnnotation(GraphQLName.class);
+			Optional<GraphQLDescription> maybeDescription = Optional.fromNullable(field.getAnnotation(GraphQLDescription.class));
 			if (name != null) {
 				fieldName = name.name();
 			}
@@ -347,6 +361,11 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 					if (!AnnotationUtils.isNullValue(typeMapperAnnotation.dataFetcher())) {
 						dataFetcherClass = typeMapperAnnotation.dataFetcher();
 					}
+				}
+
+				// set the description for the field if provided
+				if (maybeDescription.isPresent() && !AnnotationUtils.isNullValue(maybeDescription.get().value())) {
+					builder.description(maybeDescription.get().value());
 				}
 
 				// if the field type class is not null and we have an annotation on it for a custom datafetcher than use it
@@ -526,9 +545,13 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 			getOutputTypeCache().put(typeName, glTypeReference);
 			Class<?> classItem = classType;
 			Optional<GraphQLController> graphQLQueryable = Optional.fromNullable((GraphQLController) classItem.getAnnotation(GraphQLController.class));
+			Optional<GraphQLDescription> maybeGraphqlDesc = Optional.fromNullable(classItem.getAnnotation(GraphQLDescription.class));
 			Optional<IQueryFactory> queryFactory = Optional.absent();
 			Object objectInstance = null;
 
+			if (maybeGraphqlDesc.isPresent()) {
+				glType.description(maybeGraphqlDesc.get().value());
+			}
 			// if it's queryable create a factory and instance of the object that we will execute queries upon
 			if (graphQLQueryable.isPresent()) {
 				objectInstance = classItem.newInstance();
