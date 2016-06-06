@@ -199,13 +199,13 @@ public class GraphQLSchemaBuilderTest {
 			queryDescription="Query Description", mutationDescription="Mutation Description")
 	public class DocumentedMethodsTest {
 
-		@GraphQLQuery(name="someStrings")
+		@GraphQLQuery(name="getSomeStrings")
 		@GraphQLDescription("getSomeStrings description")
 		public String getSomeStrings() {
 			return "1";
 		}
 
-		@GraphQLMutation(name="someStrings")
+		@GraphQLMutation(name="setSomeStrings")
 		@GraphQLDescription("setSomeStrings description")
 		public String setSomeStrings(@GraphQLParam(name = "name")
 									 @GraphQLDescription("setSomeStrings param name description")
@@ -226,5 +226,10 @@ public class GraphQLSchemaBuilderTest {
 		GraphQLObjectType queryType = (GraphQLObjectType) schema.getQueryType().getFieldDefinition("Queries").getType();;
 		assertEquals("Mutation Description", mutationType.getDescription());
 		assertEquals("Query Description", queryType.getDescription());
+
+		GraphQLFieldDefinition someQuery = queryType.getFieldDefinition("getSomeStrings");
+		GraphQLFieldDefinition someMutation =  mutationType.getFieldDefinition("setSomeStrings");
+		assertEquals("getSomeStrings description", someQuery.getDescription());
+		assertEquals("setSomeStrings description", someMutation.getDescription());
 	}
 }
