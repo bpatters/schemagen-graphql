@@ -3,6 +3,7 @@ package com.bretpatterson.schemagen.graphql.annotations;
 import com.bretpatterson.schemagen.graphql.utils.AnnotationUtils;
 import graphql.schema.DataFetcher;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -13,7 +14,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-public @interface GraphQLTypeMapper{
+public @interface GraphQLTypeMapper {
 
 	/**
 	 * The Class this type mapper knows how to handle.

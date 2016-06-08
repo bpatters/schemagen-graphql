@@ -211,6 +211,23 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 
 		return builder;
 	}
+	private GraphQLFieldDefinition.Builder processDescription(GraphQLFieldDefinition.Builder builder, Optional<Method> method, Optional<Field> field) {
+		Optional<GraphQLDescription> maybeDescription = Optional.absent();
+		if (method.isPresent()) {
+			maybeDescription = Optional.fromNullable(method.get().getAnnotation(GraphQLDescription.class));
+		}
+		if (field.isPresent() && !maybeDescription.isPresent()) {
+			if (!maybeDescription.isPresent() ) {
+				maybeDescription = Optional.fromNullable(field.get().getAnnotation(GraphQLDescription.class));
+			}
+		}
+
+		if (maybeDescription.isPresent()) {
+			builder.description(maybeDescription.get().value());
+		}
+
+		return builder;
+	}
 
 	public Optional<GraphQLFieldDefinition> getFieldType(Type type, Method method, Optional<Object> targetObject,  Optional<String> providedFieldName) {
 		Optional<String> fieldName = providedFieldName.isPresent() ? providedFieldName : getFieldNameFromMethod(method);
@@ -227,7 +244,6 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 
 
 		GraphQLName name = method.getAnnotation(GraphQLName.class);
-		Optional<GraphQLDescription> maybeDescription = Optional.fromNullable(method.getAnnotation(GraphQLDescription.class));
 		if (name != null) {
 			fieldName = Optional.of(name.name());
 		}
@@ -241,10 +257,6 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 			if (!AnnotationUtils.isNullValue(typeMapperAnnotation.dataFetcher())) {
 				dataFetcherClass = typeMapperAnnotation.dataFetcher();
 			}
-		}
-
-		if (maybeDescription.isPresent() && !AnnotationUtils.isNullValue(maybeDescription.get().value())) {
-			builder.description(maybeDescription.get().value());
 		}
 
 		// next check if there is annotation on the method
@@ -272,7 +284,8 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 
 		builder.dataFetcher(dataFetcher);
 		processDeprecated(builder, Optional.of(method), field);
-		
+		processDescription(builder, Optional.of(method), field);
+
 		return Optional.of(builder.build());
 	}
 
@@ -500,8 +513,14 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 			GraphQLObjectType objectType = (GraphQLObjectType) outputType;
 			GraphQLInputObjectType.Builder rv = GraphQLInputObjectType.newInputObject().name(objectType.getName() + "_Input");
 
+			rv.description(((GraphQLObjectType) outputType).getDescription());
 			for (GraphQLFieldDefinition field : objectType.getFieldDefinitions()) {
-				rv.field(GraphQLInputObjectField.newInputObjectField().name(field.getName()).type(getInputType(field.getType())).build());
+				rv.field(GraphQLInputObjectField.newInputObjectField()
+						.name(field.getName())
+						.type(getInputType(field.getType()))
+						.description(field.getDescription())
+						.build());
+
 			}
 
 			GraphQLInputType type = rv.build();
