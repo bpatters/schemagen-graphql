@@ -1,0 +1,17 @@
+machine:
+  java:
+    version: oraclejdk8
+  services:
+    - docker
+dependencies:
+    override:
+    - ./gradlew build
+test:
+  override:
+     - ./gradlew test
+deployment:
+#  disable until ready for production deploy
+  prod:
+    tag: /^\d+\.\d+\.\d+$/
+    commands:
+      - ./gradlew -PbintrayUser=$bintrayUser -PbintrayApiKey=$bintrayApiKey -PreleaseVersion=$CIRCLE_TAG clean uploadArchives

@@ -4,7 +4,9 @@ plugins {
     id "com.jfrog.bintray" version "1.4"
 }
 
-def releaseVersion = System.properties.RELEASE_VERSION
+def releaseVersion = project.properties.containsKey("releaseVersion") ?: "1.0.0-SNAPSHOT"
+def bintrayUser = project.properties.containsKey("bintrayUser") ?: ""
+def bintrayApiKey = project.properties.containsKey("bintrayApiKey") ?: ""
 
 allprojects {
     description "This provides type introspection and generation of GraphQL from Pojos."
@@ -19,7 +21,7 @@ allprojects {
 
     ext {
         jacksonVersion = "2.5.1";
-        graphQLJavaVersion = "2.0.0";
+        graphQLJavaVersion = "2.1.0";
         jacocoReportsDir = "$buildDir/reports/jacoco"
         junitVersion = "4.12"
         mockitoVersion = "1.9.5"
@@ -123,8 +125,8 @@ allprojects {
     }
 
     bintray {
-        user = System.env.BINTRAY_USER ?: project["bintray.user"]
-        key = System.env.BINTRAY_API_KEY ?: project["bintray.key"]
+        user = bintrayUser ?: project["bintray.user"]
+        key = bintrayApiKey ?: project["bintray.key"]
         publications = ['schemagenGraphQL']
         publish = true
         pkg {
