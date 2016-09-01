@@ -3,14 +3,18 @@ import java.text.SimpleDateFormat
 plugins {
     id "com.jfrog.bintray" version "1.4"
 }
-
-def releaseVersion = project.properties.containsKey("releaseVersion") ?: "1.0.0-SNAPSHOT"
-def bintrayUser = project.properties.containsKey("bintrayUser") ?: ""
-def bintrayApiKey = project.properties.containsKey("bintrayApiKey") ?: ""
+String bintrayUser = project["bintrayUser"]
+String bintrayApiKey = project["bintrayApiKey"]
 
 allprojects {
     description "This provides type introspection and generation of GraphQL from Pojos."
     group 'com.bretpatterson'
+
+    def releaseVersion = project.properties.containsKey("releaseVersion") ? project["releaseVersion"]: "1.0.0-SNAPSHOT"
+
+    bintrayUser = project["bintrayUser"]
+    bintrayApiKey = project["bintrayApiKey"]
+    println("User="+bintrayUser+" api="+bintrayApiKey)
 
     apply plugin: 'java'
     apply plugin: 'jacoco'
@@ -125,8 +129,8 @@ allprojects {
     }
 
     bintray {
-        user = bintrayUser ?: project["bintray.user"]
-        key = bintrayApiKey ?: project["bintray.key"]
+        user = bintrayUser
+        key = bintrayApiKey
         publications = ['schemagenGraphQL']
         publish = true
         pkg {
