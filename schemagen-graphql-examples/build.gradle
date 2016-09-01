@@ -53,8 +53,6 @@ publishing {
 }
 
 bintray {
-    user = bintrayUser
-    key = bintrayApiKey
     publications = ['schemagenGraphQLExamples']
     publish = true
     pkg {
