@@ -14,4 +14,4 @@ deployment:
   prod:
     tag: /^\d+\.\d+\.\d+$/
     commands:
-      - ./gradlew -PbintrayUser=$bintrayUser -PbintrayApiKey=$bintrayApiKey -PreleaseVersion=$CIRCLE_TAG clean uploadArchives
+      - ./gradlew -PbintrayUser=$bintrayUser -PbintrayApiKey=$bintrayApiKey -PreleaseVersion=$CIRCLE_TAG clean bintray
