@@ -1,7 +1,7 @@
 Java GraphQL Schema Generation and Execution Framework
 ========
 The versioning follows [Semantic Versioning](http://semver.org).
-[![Build Status](https://travis-ci.org/bpatters/schemagen-graphql.svg?branch=master)](https://travis-ci.org/bpatters/schemagen-graphql)
+[![CircleCI](https://circleci.com/gh/bpatters/schemagen-graphql.svg?style=svg)](https://circleci.com/gh/bpatters/schemagen-graphql)
 [![Latest Release](https://maven-badges.herokuapp.com/maven-central/com.bretpatterson/schemagen-graphql/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.bretpatterson/schemagen-graphql/)
 
 # Table of Contents
