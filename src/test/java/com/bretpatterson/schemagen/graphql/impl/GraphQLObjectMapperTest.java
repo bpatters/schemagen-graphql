@@ -521,4 +521,27 @@ public class GraphQLObjectMapperTest {
 		assertEquals("The field description", objectType.getFieldDefinition("field").getDescription());
 		assertEquals("The method description", objectType.getFieldDefinition("value").getDescription());
 	}
+
+
+	public abstract class AbstractBaseB {
+		protected int field1 = 1;
+
+		public abstract int getField1();
+	}
+
+	public class SubB extends AbstractBaseB {
+		public int getField1() { return field1; }
+	}
+
+	@Test
+	public void testAbstractMethods() {
+		IGraphQLObjectMapper graphQLObjectMapper = newGraphQLObjectMapper(
+				ImmutableList.<IGraphQLTypeMapper> builder().addAll(GraphQLSchemaBuilder.getDefaultTypeMappers()).build());
+		GraphQLObjectType objectType = (GraphQLObjectType) graphQLObjectMapper.getOutputType(new TypeToken<SubB>() {
+		}.getType());
+
+		assertNotNull(objectType.getFieldDefinition("field1"));
+		assertEquals("field1", objectType.getFieldDefinition("field1").getName());
+		assertEquals(Scalars.GraphQLInt, objectType.getFieldDefinition("field1").getType());
+	}
 }

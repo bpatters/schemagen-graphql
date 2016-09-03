@@ -26,10 +26,13 @@ import com.bretpatterson.schemagen.graphql.typemappers.IGraphQLTypeMapper;
 import com.bretpatterson.schemagen.graphql.utils.AnnotationUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import graphql.Scalars;
@@ -63,6 +66,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+
+import static java.util.Collections.addAll;
 
 /**
  * This is the meat of the schema gen package. Utilizing the configured properties it will traverse the objects provided and generate a type
@@ -347,6 +352,10 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 	public Optional<GraphQLFieldDefinition> getFieldType(Type type, Field field, Optional<Object> targetObject, Optional<String> providedFieldName) {
 		String fieldName = providedFieldName.isPresent() ? providedFieldName.get() : field.getName();
 
+		if (Modifier.isAbstract(field.getModifiers())) {
+			LOGGER.info("Ignoring types {} abstract field {}  ", type, field);
+			return Optional.absent();
+		}
 		if (Modifier.isStatic(field.getModifiers())) {
 			LOGGER.info("Ignoring types {} static field {}  ", type, field);
 			return Optional.absent();
@@ -567,6 +576,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 			Optional<GraphQLDescription> maybeGraphqlDesc = Optional.fromNullable(classItem.getAnnotation(GraphQLDescription.class));
 			Optional<IQueryFactory> queryFactory = Optional.absent();
 			Object objectInstance = null;
+			Set<String> fieldNames = Sets.newHashSet();
 
 			if (maybeGraphqlDesc.isPresent()) {
 				glType.description(maybeGraphqlDesc.get().value());
@@ -593,7 +603,22 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 			}
 			// end when there are no more super classes and while ignore java.* types
 			while (classItem != null && !classPackage.startsWith("java.")) {
-				fields.addAll(getGraphQLFieldDefinitions(Optional.absent(), type, classItem, Optional.<List<Field>>absent(), Optional.<List<Method>>absent()));
+				Collection<GraphQLFieldDefinition> newFields;
+				if (queryFactory.isPresent()) {
+					newFields = queryFactory.get().newMethodQueriesForObject(this, objectInstance);
+				} else {
+					newFields = getGraphQLFieldDefinitions(Optional.absent(), type, classItem, Optional.<List<Field>>absent(), Optional.<List<Method>>absent());
+				}
+				if (newFields != null) {
+					for (GraphQLFieldDefinition f : newFields) {
+						if (!fieldNames.contains(f.getName())) {
+							fieldNames.add(f.getName());
+							fields.add(f);
+						} else {
+							LOGGER.info("Ignoring duplicate field {} from type {}", f.getName(), classItem.getName());
+						}
+					}
+				}
 
 				// pop currentContext
 				classItem = classItem.getSuperclass();
@@ -601,10 +626,6 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 					classPackage = classItem.getPackage().getName();
 				} else {
 					classPackage = "";
-				}
-
-				if (queryFactory.isPresent()) {
-					fields.addAll(queryFactory.get().newMethodQueriesForObject(this, objectInstance));
 				}
 			}
 
