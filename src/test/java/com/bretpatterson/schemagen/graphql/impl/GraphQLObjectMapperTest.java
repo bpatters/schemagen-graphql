@@ -8,7 +8,7 @@ import com.bretpatterson.schemagen.graphql.annotations.GraphQLDataFetcher;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLDeprecated;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLDescription;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLIgnore;
-import com.bretpatterson.schemagen.graphql.annotations.GraphQLName;
+import com.bretpatterson.schemagen.graphql.annotations.GraphQLParam;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeConverter;
 import com.bretpatterson.schemagen.graphql.annotations.GraphQLTypeMapper;
 import com.bretpatterson.schemagen.graphql.datafetchers.CollectionConverterDataFetcher;
@@ -23,9 +23,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import graphql.Scalars;
 import graphql.schema.DataFetcher;
+import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLList;
+import graphql.schema.GraphQLNonNull;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLOutputType;
 import org.junit.Before;
@@ -350,6 +352,33 @@ public class GraphQLObjectMapperTest {
 				ImmutableList.<IGraphQLTypeMapper> builder().add(new TestTypeMapper()).addAll(GraphQLSchemaBuilder.getDefaultTypeMappers()).build());
 		assertEquals(Scalars.GraphQLString, graphQLObjectMapper.getOutputType(new TypeToken<TestType>() {
 		}.getType()));
+	}
+
+	public class MethodRequiredFields {
+
+		public Object getMethod(@GraphQLParam(name = "param1", required = true) String param1,
+								@GraphQLParam(name = "param2") String param2) {
+			return null;
+		}
+	}
+
+	@SuppressWarnings("serial")
+	@Test
+	public void testMethodParameterRequired() {
+		IGraphQLObjectMapper graphQLObjectMapper = newGraphQLObjectMapper(
+				ImmutableList.<IGraphQLTypeMapper>builder().add(new TestTypeMapper()).addAll(GraphQLSchemaBuilder.getDefaultTypeMappers()).build());
+
+		GraphQLObjectType objectType = (GraphQLObjectType) graphQLObjectMapper.getOutputType(new TypeToken<MethodRequiredFields>() {
+		}.getType());
+
+		assertEquals(MethodRequiredFields.class.getSimpleName(), objectType.getName());
+		assertEquals(1, objectType.getFieldDefinitions().size());
+		assertNotNull(objectType.getFieldDefinition("method"));
+
+		List<GraphQLArgument> arguments = objectType.getFieldDefinition("method").getArguments();
+		assertEquals(2, arguments.size());
+		assertEquals(new GraphQLNonNull(Scalars.GraphQLString), arguments.get(0).getType());
+		assertEquals(Scalars.GraphQLString, arguments.get(1).getType());
 	}
 
 	public class MethodBasedFields {
