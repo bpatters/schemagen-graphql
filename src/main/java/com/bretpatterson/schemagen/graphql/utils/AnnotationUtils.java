@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Common Annotaiton related utility methods.
+ * Common Annotation related utility methods.
  */
 public class AnnotationUtils {
 
@@ -27,10 +27,11 @@ public class AnnotationUtils {
 	private static ClassPath classPath;
 
 	public final static class DEFAULT_NULL_CLASS extends DefaultMethodDataFetcher {}
-
 	static {
 		try {
-			classLoader = AnnotationUtils.class.getClassLoader();
+			// Change classloader to work with spring boot executable jars
+			// http://docs.spring.io/spring-boot/docs/current/reference/html/executable-jar.html#executable-jar-system-classloader
+			classLoader = Thread.currentThread().getContextClassLoader();
 			classPath = ClassPath.from(classLoader);
 		} catch (IOException ex) {
 			Throwables.propagate(ex);
