@@ -26,13 +26,9 @@ import com.bretpatterson.schemagen.graphql.typemappers.IGraphQLTypeMapper;
 import com.bretpatterson.schemagen.graphql.utils.AnnotationUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import graphql.Scalars;
@@ -44,6 +40,7 @@ import graphql.schema.GraphQLInputObjectField;
 import graphql.schema.GraphQLInputObjectType;
 import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLInterfaceType;
+import graphql.schema.GraphQLNonNull;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLScalarType;
@@ -67,7 +64,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import static java.util.Collections.addAll;
 
 /**
  * This is the meat of the schema gen package. Utilizing the configured properties it will traverse the objects provided and generate a type
@@ -182,7 +178,7 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 		}
 		return fieldName;
 	}
-	
+
 	private Optional<Field> getField(Class<?> typeClass, String fieldName) {
 		try {
 			return Optional.of(typeClass.getDeclaredField(fieldName));
@@ -306,7 +302,14 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 				continue;
 			}
 			GraphQLParam graphQLParam = maybeGraphQLParam.get();
-			GraphQLArgument.Builder argBuilder = GraphQLArgument.newArgument().type(getInputType(paramType)).name(graphQLParam.name());
+
+			GraphQLInputType inputType = getInputType(paramType);
+
+			if (graphQLParam.required()) {
+				inputType = new GraphQLNonNull(inputType);
+			}
+
+			GraphQLArgument.Builder argBuilder = GraphQLArgument.newArgument().type(inputType).name(graphQLParam.name());
 
 			if (maybeGraphQLParamDesc.isPresent()) {
 				argBuilder.description(maybeGraphQLParamDesc.get().value());
