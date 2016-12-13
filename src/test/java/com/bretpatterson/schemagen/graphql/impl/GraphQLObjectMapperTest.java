@@ -142,9 +142,7 @@ public class GraphQLObjectMapperTest {
 		assertNotNull(edgeObject.getFieldDefinition("node"));
 		assertNotNull(edgeObject.getFieldDefinition("cursor"));
 		assertEquals(Scalars.GraphQLString, edgeObject.getFieldDefinition("node").getType());
-		assertEquals(GraphQLObjectType.class, edgeObject.getFieldDefinition("cursor").getType().getClass());
-		assertNotNull(((GraphQLObjectType) edgeObject.getFieldDefinition("cursor").getType()).getFieldDefinition("value"));
-		assertEquals(Scalars.GraphQLString, ((GraphQLObjectType) edgeObject.getFieldDefinition("cursor").getType()).getFieldDefinition("value").getType());
+		assertEquals(Scalars.GraphQLString, edgeObject.getFieldDefinition("cursor").getType());
 	}
 
 	private class InnerGeneric<R, S> {

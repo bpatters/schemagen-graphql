@@ -142,8 +142,8 @@ public class RelayTest {
 	private RelayConnection<GameDTO> findGames(int first) throws IOException {
 
 		ExecutionResult result = new GraphQL(schema).execute(String
-				.format("{ Queries { games(first:%d) { edges { node {id, name}, cursor {value} } , pageInfo {hasPreviousPage, hasNextPage} } } }", first));
-		assertEquals(0, result.getErrors().size());
+				.format("{ Queries { games(first:%d) { edges { node {id, name}, cursor } , pageInfo {hasPreviousPage, hasNextPage} } } }", first));
+		assertEquals(result.getErrors().toString(), 0, result.getErrors().size());
 
 		return deserialize(objectMapper.writeValueAsString(getQueryResults(result, "games")), new TypeReference<RelayConnection<GameDTO>>() {
 		});
