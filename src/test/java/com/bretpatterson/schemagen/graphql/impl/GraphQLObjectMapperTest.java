@@ -571,4 +571,28 @@ public class GraphQLObjectMapperTest {
 		assertEquals("field1", objectType.getFieldDefinition("field1").getName());
 		assertEquals(Scalars.GraphQLInt, objectType.getFieldDefinition("field1").getType());
 	}
+
+	public class GetAndIs {
+		public GetAndIs get() {
+			return this;
+		}
+
+		public boolean is(Object obj) {
+			return this == obj;
+		}
+	}
+
+	/**
+	 * Issue #10
+	 */
+	@Test
+	public void testGetAndIs() {
+		IGraphQLObjectMapper graphQLObjectMapper = newGraphQLObjectMapper(
+				ImmutableList.<IGraphQLTypeMapper> builder().addAll(GraphQLSchemaBuilder.getDefaultTypeMappers()).build());
+
+		GraphQLObjectType objectType = (GraphQLObjectType) graphQLObjectMapper.getOutputType(new TypeToken<GetAndIs>() {
+		}.getType());
+
+		assertTrue(objectType.getFieldDefinitions().isEmpty());
+	}
 }

@@ -154,10 +154,13 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 
 	private Optional<String> getFieldNameFromMethod(Method m) {
 		Optional<String> fieldName = Optional.absent();
-		if (m.getName().startsWith("get")) {
+
+		// Do not match 'get' method
+		if (m.getName().startsWith("get") && m.getName().length() > 3) {
 			fieldName =  Optional.of(m.getName().substring(3, 4).toLowerCase() + m.getName().substring(4));
 		}
-		if (m.getName().startsWith("is")) {
+		// Do not match 'is' method
+		if (m.getName().startsWith("is") && m.getName().length() > 2) {
 			fieldName = Optional.of(m.getName().substring(2, 3).toLowerCase() + m.getName().substring(3));
 		}
 		GraphQLQuery query = m.getAnnotation(GraphQLQuery.class);
