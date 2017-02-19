@@ -526,7 +526,15 @@ public class GraphQLObjectMapper implements IGraphQLObjectMapper, TypeResolver {
 			return (GraphQLInputType) outputType;
 		} else if (outputType instanceof GraphQLObjectType) {
 			GraphQLObjectType objectType = (GraphQLObjectType) outputType;
-			GraphQLInputObjectType.Builder rv = GraphQLInputObjectType.newInputObject().name(objectType.getName() + "_Input");
+
+			final String inputTypeName;
+
+			inputTypeName = String.format("%s%s%s",
+					objectType.getName(),
+					this.getTypeNamingStrategy().getDelimiter(),
+					this.getTypeNamingStrategy().getInputTypePostfix());
+
+			GraphQLInputObjectType.Builder rv = GraphQLInputObjectType.newInputObject().name(inputTypeName);
 
 			rv.description(((GraphQLObjectType) outputType).getDescription());
 			for (GraphQLFieldDefinition field : objectType.getFieldDefinitions()) {

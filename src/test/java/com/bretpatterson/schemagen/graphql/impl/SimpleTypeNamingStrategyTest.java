@@ -38,4 +38,23 @@ public class SimpleTypeNamingStrategyTest {
 		given(graphQLObjectMapper.getClassFromType(eq(new TypeToken<Connection<String>>(){}.getType()))).willReturn((Class) Connection.class);
 		assertEquals("Connection_String", strategy.getTypeName(graphQLObjectMapper, new TypeToken<Connection<String>>(){}.getType()));
 	}
+
+	@SuppressWarnings({ "unchecked", "serial", "rawtypes" })
+	@Test
+	public void TestConfigureDelimiterAndInputPostfix() {
+		ITypeNamingStrategy strategy = new SimpleTypeNamingStrategy("$", "GraphQLInput");
+
+
+		given(graphQLObjectMapper.getClassFromType(eq(String.class))).willReturn((Class) String.class);
+
+		assertEquals("String", strategy.getTypeName(graphQLObjectMapper, String.class));
+
+		given(graphQLObjectMapper.getClassFromType(eq(new TypeToken<RelayConnection<String>>(){}.getType()))).willReturn((Class) RelayConnection.class);
+		assertEquals("RelayConnection$String", strategy.getTypeName(graphQLObjectMapper, new TypeToken<RelayConnection<String>>(){}.getType()));
+
+		given(graphQLObjectMapper.getClassFromType(eq(new TypeToken<Connection<String>>(){}.getType()))).willReturn((Class) Connection.class);
+		assertEquals("Connection$String", strategy.getTypeName(graphQLObjectMapper, new TypeToken<Connection<String>>(){}.getType()));
+	}
+
+
 }

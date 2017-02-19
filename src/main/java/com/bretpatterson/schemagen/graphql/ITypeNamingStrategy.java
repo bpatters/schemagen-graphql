@@ -14,4 +14,16 @@ public interface ITypeNamingStrategy {
 	 * @return
 	 */
 	String getTypeName(IGraphQLObjectMapper graphQLObjectMapper, Type type);
+
+	/**
+	 * String to append to GraphQL InputType's
+	 * @return
+	 */
+	String getInputTypePostfix();
+
+	/**
+	 * Delimiter used for separating sections of a type name
+	 * @return
+	 */
+	String getDelimiter();
 }
