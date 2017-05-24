@@ -69,7 +69,7 @@ public class GraphQLSchemaBuilder {
 	private ClassPath classPath;
 	private boolean relayEnabled = false;
 
-	private GraphQLSchemaBuilder() {
+	public GraphQLSchemaBuilder() {
 		this.rootQueryBuilder = GraphQLObjectType.newObject().name("Query").description("Root of Query Schema");
 		this.rootMutationBuilder = GraphQLObjectType.newObject().name("Mutation").description("Root of Mutation Schema");
 		this.defaultTypeConverters = getDefaultTypeConverters();
