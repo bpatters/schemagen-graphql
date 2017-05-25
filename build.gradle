@@ -12,7 +12,7 @@ allprojects {
     description "This provides type introspection and generation of GraphQL from Pojos."
     group 'com.bretpatterson'
 
-    def releaseVersion = project.properties.containsKey("releaseVersion") ? project["releaseVersion"]: "1.0.0-SNAPSHOT"
+    def releaseVersion = project.properties.containsKey("releaseVersion") ? project["releaseVersion"]: "1.1.0-SNAPSHOT"
 
     apply plugin: 'java'
     apply plugin: 'jacoco'
@@ -23,7 +23,7 @@ allprojects {
 
     ext {
         jacksonVersion = "2.5.1";
-        graphQLJavaVersion = "2.1.0";
+        graphQLJavaVersion = "2.4.0";
         jacocoReportsDir = "$buildDir/reports/jacoco"
         junitVersion = "4.12"
         mockitoVersion = "1.9.5"
@@ -47,7 +47,7 @@ allprojects {
         }
     }
     jacoco {
-        toolVersion = "0.7.1.201405082137"
+        toolVersion = "0.7.6.201602180812"
     }
 
     test {

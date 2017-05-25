@@ -121,7 +121,7 @@ public class GraphQLObjectMapperTest {
 		assertTypeMapping("Float", Scalars.GraphQLFloat, graphQLObjectMapper.getOutputType(double.class));
 		assertTypeMapping("Boolean", Scalars.GraphQLBoolean, graphQLObjectMapper.getOutputType(Boolean.class));
 		assertTypeMapping("com_bretpatterson_schemagen_graphql_impl_GraphQLObjectMapperTest",
-				GraphQLObjectType.newObject().name("com.bretpatterson_schemagen_graphql_impl_GraphQLObjectMapperTest").build(),
+				GraphQLObjectType.newObject().name("com_bretpatterson_schemagen_graphql_impl_GraphQLObjectMapperTest").build(),
 				graphQLObjectMapper.getOutputType(this.getClass()));
 	}
 
