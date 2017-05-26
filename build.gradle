@@ -12,7 +12,7 @@ allprojects {
     description "This provides type introspection and generation of GraphQL from Pojos."
     group 'com.bretpatterson'
 
-    def releaseVersion = project.properties.containsKey("releaseVersion") ? project["releaseVersion"]: "1.0.0-SNAPSHOT"
+    def releaseVersion = project.properties.containsKey("releaseVersion") ? project["releaseVersion"]: "1.0.3-SNAPSHOT"
 
     apply plugin: 'java'
     apply plugin: 'jacoco'

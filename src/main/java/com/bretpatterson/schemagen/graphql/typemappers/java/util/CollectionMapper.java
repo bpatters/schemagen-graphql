@@ -37,9 +37,9 @@ public class CollectionMapper implements IGraphQLTypeMapper {
 	public GraphQLInputType getInputType(IGraphQLObjectMapper graphQLObjectMapper, Type type) {
 		if (type instanceof ParameterizedType) {
 			ParameterizedType parameterizedType = (ParameterizedType) type;
-			return new GraphQLList(graphQLObjectMapper.getOutputType(parameterizedType.getActualTypeArguments()[0]));
+			return new GraphQLList(graphQLObjectMapper.getInputType(parameterizedType.getActualTypeArguments()[0]));
 		} else {
-			return new GraphQLList(graphQLObjectMapper.getOutputType(Object.class));
+			return new GraphQLList(graphQLObjectMapper.getInputType(Object.class));
 		}
 	}
 
