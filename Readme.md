@@ -1,3 +1,5 @@
+> NOTE: I'm looking for users who would like to help maintain/improve this project. I haven't had the time to actively maintain this >repository the past year and if someone would like to help update/mainain this repository I'd like to add you to the project. Join the gitter channel at https://gitter.im/schemagen-graphql/Lobby# and message me if interested.
+
 Java GraphQL Schema Generation and Execution Framework
 ========
 The versioning follows [Semantic Versioning](http://semver.org).
